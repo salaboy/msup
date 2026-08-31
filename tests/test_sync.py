@@ -416,6 +416,30 @@ class TestManualImages(unittest.TestCase):
             self.assertIn("il_1140xN", v["cover"]["srcset"])
 
 
+    def test_gallery_applies_to_a_stored_db_without_a_sync(self):
+        """Regression: adding data/images/<id>.json and pushing must publish the
+        gallery on the next build. Previously only the sync applied these, so a
+        plain deploy shipped a stale one-photo page and the file looked ignored.
+        """
+        with tempfile.TemporaryDirectory() as d:
+            self.write_gallery(d, "4565863595", [self.URL, self.URL.replace("8503570133", "999")])
+            items, _ = m.parse_feed(FIX_FEED)
+            db, _ = m.merge(m.empty_db(), items, now="2026-08-31")
+            self.assertEqual(len(db["works"][0]["etsy"]["images"]), 1)
+
+            applied = m.apply_manual_images_to_db(db, m.load_manual_images(d))
+            self.assertEqual(applied, ["4565863595"])
+            self.assertEqual(len(m.view(db["works"][0])["images"]), 2)
+
+    def test_applying_to_db_leaves_manual_works_alone(self):
+        db = m.empty_db()
+        db["works"].append({
+            "id": "4565863595", "source": "manual", "etsy": None,
+            "sync": {"available": True}, "curation": dict(m.CURATION_DEFAULTS),
+        })
+        self.assertEqual(m.apply_manual_images_to_db(db, {"4565863595": [{"src": self.URL}]}), [])
+
+
 class TestSyncScript(unittest.TestCase):
     """End-to-end via the CLI, using a local fixture instead of the network."""
 

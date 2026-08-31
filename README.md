@@ -64,8 +64,9 @@ site and drag the **MSup: grab photos** button to your bookmarks bar.
 (If a browser blocks the download it copies the same text to the clipboard
 instead, and tells you the filename to use.)
 
-The next sync picks it up. A listing with no file falls back to the single RSS
-photo, so nothing breaks if you skip this.
+That's it — committing the file rebuilds and publishes the gallery on its own.
+A listing with no file falls back to the single RSS photo, so nothing breaks if
+you skip this.
 
 `data/images/` is yours — the sync reads it and never writes to it. The first
 entry is the cover shown in the grid; reorder to change it. Full-resolution
@@ -131,7 +132,7 @@ data/images/*.json┘      (upsert)     (source of truth)   (templates/)
 | `scripts/sync_etsy.py` | Etsy → `works.json`. Never deletes. |
 | `scripts/build.py` | `works.json` + `templates/` → `_site/`. |
 | `tools/grab-photos.js` | The bookmarklet source, compiled into `/tools/` at build time. |
-| `data/images/` | Captured galleries, one file per listing. Yours to edit. |
+| `data/images/` | Captured galleries, one file per listing. Yours to edit. Applied by both the sync and the build, so committing one is enough. |
 | `data/site.json` | Titles, URLs, nav. |
 | `content/*.txt` | Bio and page intro, as plain text. |
 

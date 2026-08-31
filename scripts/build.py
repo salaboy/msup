@@ -33,6 +33,7 @@ TEMPLATES = os.path.join(ROOT, "templates")
 CONTENT = os.path.join(ROOT, "content")
 STATIC = os.path.join(ROOT, "static")
 DEFAULT_OUT = os.path.join(ROOT, "_site")
+IMAGES_DIR = os.path.join(ROOT, "data", "images")
 
 # Gallery selection is CSS-only (radio + :has()), and style.css carries one
 # rule per index. Keep these in step.
@@ -503,6 +504,17 @@ def main(argv=None):
         sys.stderr.write("warning: %s missing — building an empty site.\n"
                          "Run scripts/sync_etsy.py first.\n" % works_path)
         db = m.empty_db()
+
+    # Captured galleries are applied here as well as in the sync, so that
+    # committing data/images/<id>.json and pushing is enough to publish the
+    # gallery — no sync run required.
+    try:
+        applied = m.apply_manual_images_to_db(db, m.load_manual_images(IMAGES_DIR))
+    except ValueError as exc:
+        sys.stderr.write("error: %s\n" % exc)
+        return 2
+    if applied and args.verbose:
+        sys.stderr.write("applied captured galleries for: %s\n" % ", ".join(applied))
 
     if os.path.exists(args.out):
         shutil.rmtree(args.out)

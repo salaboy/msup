@@ -432,6 +432,28 @@ def apply_manual_images(items, galleries):
     return applied
 
 
+def apply_manual_images_to_db(db, galleries):
+    """Layer captured galleries over a stored works.json.
+
+    The build calls this as well as the sync. Without it, adding a
+    data/images/<id>.json file and pushing would deploy a page that still shows
+    the single RSS photo until the next sync happened to run — the file would
+    look ignored. Applying it at build time makes a plain push enough.
+    """
+    applied = []
+    for work in db.get("works", []):
+        gallery = galleries.get(work.get("id"))
+        if not gallery or work.get("source") != "etsy":
+            continue
+        etsy = work.get("etsy")
+        if not isinstance(etsy, dict):
+            continue
+        etsy["images"] = gallery
+        etsy["image_source"] = "file"
+        applied.append(work["id"])
+    return applied
+
+
 # --------------------------------------------------------------------------
 # merge / upsert
 # --------------------------------------------------------------------------
