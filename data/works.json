@@ -110,6 +110,107 @@
         "first_seen": "2026-08-31",
         "relisted_at": null
       }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {},
+        "fields": {
+          "description": "“Man-made machines needs to keep the order and balance between what is created and what organically grow by the laws of nature.” As part of texture and layout exploration this piece highlights the proportion between machinery and organic matter to keep a balance of 3.4/8 ratio. This hand drawn original was created in London, UK in 2025.",
+          "size": "18 x 13 cm\nFramed",
+          "title": "Microcosm!+",
+          "type": "Hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/d4fd57/8458378498/il_{size}.8458378498_8v3q.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/d4fd57/8458378498/il_fullxfull.8458378498_8v3q.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/b54f36/8458378522/il_{size}.8458378522_159l.jpg",
+            "height": 555,
+            "src": "https://i.etsystatic.com/59829812/r/il/b54f36/8458378522/il_fullxfull.8458378522_159l.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/1213b4/8458378472/il_{size}.8458378472_f9ms.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/1213b4/8458378472/il_fullxfull.8458378472_f9ms.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/daa587/8458378478/il_{size}.8458378478_s64x.jpg",
+            "height": 555,
+            "src": "https://i.etsystatic.com/59829812/r/il/daa587/8458378478/il_fullxfull.8458378478_s64x.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/f18ed6/8458378488/il_{size}.8458378488_jfff.jpg",
+            "height": 600,
+            "src": "https://i.etsystatic.com/59829812/r/il/f18ed6/8458378488/il_fullxfull.8458378488_jfff.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/bdf70c/8458378480/il_{size}.8458378480_dou3.jpg",
+            "height": 1058,
+            "src": "https://i.etsystatic.com/59829812/r/il/bdf70c/8458378480/il_fullxfull.8458378480_dou3.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/3359c3/8458378500/il_{size}.8458378500_fd6j.jpg",
+            "height": 1058,
+            "src": "https://i.etsystatic.com/59829812/r/il/3359c3/8458378500/il_fullxfull.8458378500_fd6j.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/ce7273/8458378486/il_{size}.8458378486_fh1y.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/ce7273/8458378486/il_fullxfull.8458378486_fh1y.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4566245562",
+        "price": {
+          "amount": "25.00",
+          "currency": "GBP",
+          "raw": "25.00 GBP"
+        },
+        "pub_date": "2026-08-31",
+        "slug": "microcosm-framed-original-hand-drawn1788207352",
+        "title": "Microcosm!+ ( framed, original, hand drawn )",
+        "url": "https://www.etsy.com/listing/4566245562/microcosm-framed-original-hand-drawn1788207352"
+      },
+      "id": "4566245562",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-08-31",
+        "relisted_at": null
+      }
     }
   ]
 }
