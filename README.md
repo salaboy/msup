@@ -36,29 +36,44 @@ You can invent new labels — `Edition:`, `Paper:`, `Year:` — and they show up
 automatically. A description with no labels at all still works; it's used as
 plain text.
 
-## Photos: why the API key matters
+## Photos: the gallery
 
-Etsy's RSS feed carries **only the first photo** of each listing, and the other
-image URLs cannot be guessed — each one ends in a required per-image suffix
-(`..._1rfk.jpg`) with no derivable pattern. Without a key, every piece on the
-site shows one photo.
+Etsy's RSS feed carries **only the first photo** of each listing. The other
+image URLs cannot be guessed — each ends in a required per-image suffix
+(`..._1rfk.jpg`) with no derivable pattern — and Etsy's listing pages are
+behind DataDome, so no server can read them. Verified: plain HTTP, headless
+Chrome (with and without anti-automation flags), the mobile site, the apex
+domain and oEmbed all return 403 or 404. The shop RSS feed is the only open
+surface.
 
-With a free API key, the sync pulls **every photo** for every listing and the
-artwork pages get a proper gallery.
+Your own browser, however, is never blocked. So the photos are captured there,
+once per artwork, and committed.
 
-**One-time setup:**
+**Set up once:** open [`/tools/`](https://salaboy.github.io/msup/tools/) on the
+site and drag the **MSup: grab photos** button to your bookmarks bar.
 
-1. Register an app at <https://www.etsy.com/developers/register> (read-only
-   access to public listing data is all this needs).
-2. Copy the **keystring**.
-3. In this repo: **Settings → Secrets and variables → Actions → New repository
-   secret**, named `ETSY_API_KEY`.
+**For each new artwork:**
 
-That's it — the workflow picks it up automatically. Locally:
-`ETSY_API_KEY=... python3 scripts/sync_etsy.py`.
+1. Open the listing on Etsy and click through the photos so they load.
+2. Click **MSup: grab photos** — it downloads a file already named after the
+   listing, e.g. `4565863595.json`.
+3. Move that file into `data/images/`. On GitHub: open the `data/images` folder
+   → **Add file → Upload files** → drag it in from Downloads → commit.
+   No renaming needed.
 
-If the key is missing or a request fails, the sync falls back to the single RSS
-photo rather than failing the run.
+(If a browser blocks the download it copies the same text to the clipboard
+instead, and tells you the filename to use.)
+
+The next sync picks it up. A listing with no file falls back to the single RSS
+photo, so nothing breaks if you skip this.
+
+`data/images/` is yours — the sync reads it and never writes to it. The first
+entry is the cover shown in the grid; reorder to change it. Full-resolution
+URLs are fine: the build serves downsized variants in the grid and keeps the
+original for "view full size".
+
+<sub>If Etsy ever grants you an API key, set `ETSY_API_KEY` as a repo secret and
+the sync will pull galleries automatically — captured files still win.</sub>
 
 ## When something sells
 
@@ -93,7 +108,7 @@ Edit it directly on GitHub and the site rebuilds on save.
 python3 scripts/serve.py                 # build + preview at localhost:8000/msup/
 python3 scripts/sync_etsy.py --dry-run   # show what a sync would change
 python3 scripts/build.py                 # build into _site/
-python3 -m unittest discover -s tests    # 35 tests, no network needed
+python3 -m unittest discover -s tests    # 45 tests, no network needed
 ```
 
 `_site/` is generated and gitignored — never edit it. The only file the sync
@@ -103,10 +118,11 @@ was listed and what sold.
 ## How it fits together
 
 ```
-Etsy RSS  ─┐
-           ├─▶ scripts/sync_etsy.py ──▶ data/works.json ──▶ build.py ──▶ _site/ ──▶ Pages
-Etsy API  ─┘        (upsert)           (source of truth)   (templates/)
- (photos)
+Etsy RSS ─────────┐   (listings, prices, sold status — automatic)
+                  ├─▶ sync_etsy.py ──▶ data/works.json ──▶ build.py ──▶ _site/ ──▶ Pages
+data/images/*.json┘      (upsert)     (source of truth)   (templates/)
+ (photos, captured
+  in your browser)
 ```
 
 | File | Role |
@@ -114,6 +130,8 @@ Etsy API  ─┘        (upsert)           (source of truth)   (templates/)
 | `scripts/msuplib.py` | Feed parsing, API images, merge rules, srcset. All the logic worth testing. |
 | `scripts/sync_etsy.py` | Etsy → `works.json`. Never deletes. |
 | `scripts/build.py` | `works.json` + `templates/` → `_site/`. |
+| `tools/grab-photos.js` | The bookmarklet source, compiled into `/tools/` at build time. |
+| `data/images/` | Captured galleries, one file per listing. Yours to edit. |
 | `data/site.json` | Titles, URLs, nav. |
 | `content/*.txt` | Bio and page intro, as plain text. |
 
@@ -121,8 +139,12 @@ Etsy API  ─┘        (upsert)           (source of truth)   (templates/)
 
 A few decisions that look odd until you know the reason:
 
-- **RSS for listings, the API only for photos.** RSS needs no key, so the site
-  keeps working if the key is ever revoked — it just loses galleries.
+- **RSS for listings, the browser for photos.** RSS needs no key and no
+  scraping, so the daily sync keeps working unattended. Only the photos need a
+  human, and only once per artwork.
+- **No server-side scraping.** Even if a bypass worked today, the sync runs on
+  GitHub Actions datacenter IPs — the most heavily scrutinised kind — so it
+  would break silently and leave empty galleries.
 - **The sync refuses to write when the feed comes back empty** (exit code 3).
   A bot challenge or a shop rename would otherwise mark every piece sold in one
   unattended overnight run. Override with `--allow-empty` if the shop really is
@@ -141,7 +163,8 @@ A few decisions that look odd until you know the reason:
 
 ### Known limitations
 
-- **Without `ETSY_API_KEY`, one photo per piece.** See above.
+- **Photos need a manual capture per artwork.** See above. Everything else
+  (new listings, prices, sold status) is fully automatic.
 - **Hotlinked images depend on Etsy.** Photos of sold or deactivated listings
   usually keep serving for years; photos of *deleted* listings eventually 404,
   and a broken image falls back to a placeholder. For a guaranteed archive, run
@@ -153,7 +176,7 @@ A few decisions that look odd until you know the reason:
 ## Still to do
 
 - [ ] Enable Pages: **Settings → Pages → Source: GitHub Actions**
-- [ ] Add the `ETSY_API_KEY` secret so pieces get full galleries
+- [ ] Install the bookmarklet and capture the photos for FIX
 - [ ] Verify the live site at `https://salaboy.github.io/msup/`
 - [ ] Point `marylandsupreme.com` at Pages, then cancel Big Cartel
 - [ ] Optional: backfill older Big Cartel work as `source: "manual"` records

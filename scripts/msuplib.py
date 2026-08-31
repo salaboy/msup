@@ -139,7 +139,7 @@ _IMG_RE = re.compile(r"<img[^>]+src=\"([^\"]+)\"", re.I)
 _ATTR_RE = r'{0}="(\d+)"'
 _LISTING_RE = re.compile(r"/listing/(\d+)(?:/([^/?#]*))?")
 _LABEL_RE = re.compile(r"^([A-Za-z][A-Za-z0-9 _/&-]{0,40}):\s*(.*)$")
-_SIZE_TOKEN_RE = re.compile(r"il_(?:\d+xN|fullxfull)")
+_SIZE_TOKEN_RE = re.compile(r"il_(?:\d+x\d+|\d+xN|fullxfull)")
 _PRICE_RE = re.compile(r"^([\d.,]+)\s*([A-Z]{3})$")
 _PRICE_RE_ALT = re.compile(r"^([A-Z]{3})\s*([\d.,]+)$")
 
@@ -363,6 +363,73 @@ def parse_feed(xml_bytes):
 def _findtext(elem, tag):
     found = elem.find(tag)
     return found.text if found is not None and found.text else ""
+
+
+def normalise_image(entry):
+    """Accept a plain URL string or {"url":…, "w":…, "h":…} and normalise it.
+
+    Both shapes are allowed because these files are hand-pasted: the
+    bookmarklet emits objects with dimensions, but a URL typed by hand should
+    work just as well.
+    """
+    if isinstance(entry, str):
+        url, width, height, alt = entry, None, None, None
+    elif isinstance(entry, dict):
+        url = entry.get("url") or entry.get("src")
+        width = entry.get("w") or entry.get("width")
+        height = entry.get("h") or entry.get("height")
+        alt = entry.get("alt")
+    else:
+        return None
+    if not url or not isinstance(url, str):
+        return None
+    return {
+        "src": url,
+        "base": image_base(url),
+        "width": int(width) if width else None,
+        "height": int(height) if height else None,
+        "alt": alt or None,
+    }
+
+
+def load_manual_images(directory):
+    """Read data/images/<listing_id>.json into {listing_id: [image, …]}.
+
+    Etsy's listing pages are bot-protected, so the gallery URLs are captured in
+    a real browser (see tools/) and committed here. This directory is
+    human-owned: the sync reads it and never writes to it.
+    """
+    galleries = {}
+    if not os.path.isdir(directory):
+        return galleries
+    for name in sorted(os.listdir(directory)):
+        if not name.endswith(".json"):
+            continue
+        listing_id = name[: -len(".json")]
+        path = os.path.join(directory, name)
+        try:
+            with open(path, encoding="utf-8") as fh:
+                raw = json.load(fh)
+        except (OSError, ValueError) as exc:
+            raise ValueError("%s is not valid JSON: %s" % (path, exc))
+        if not isinstance(raw, list):
+            raise ValueError("%s should contain a list of image URLs" % path)
+        images = [img for img in (normalise_image(e) for e in raw) if img]
+        if images:
+            galleries[listing_id] = images
+    return galleries
+
+
+def apply_manual_images(items, galleries):
+    """Swap in the captured gallery for any listing that has one."""
+    applied = []
+    for item in items:
+        gallery = galleries.get(item["listing_id"])
+        if gallery:
+            item["images"] = gallery
+            item["image_source"] = "file"
+            applied.append(item["listing_id"])
+    return applied
 
 
 # --------------------------------------------------------------------------

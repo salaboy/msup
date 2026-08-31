@@ -1,0 +1,39 @@
+<h1>Add photos to a listing</h1>
+<p class="lede">Etsy blocks servers from reading listing pages, so the photos are
+collected in your own browser instead. One click per artwork.</p>
+
+<section class="prose">
+  <h2>Set up once</h2>
+  <p>Show your bookmarks bar, then drag this button onto it:</p>
+  <p class="work-actions">
+    <a class="button bookmarklet" href="$bookmarklet_href">MSup: grab photos</a>
+  </p>
+  <p class="fine-print">On iPhone: tap the button, copy the address, then create a
+    bookmark and paste it in as the address.</p>
+
+  <h2>Each time you add an artwork</h2>
+  <ol>
+    <li>Open your new listing on Etsy.</li>
+    <li>Click through the photos once so they all load.</li>
+    <li>Click <strong>MSup: grab photos</strong>. It downloads a file already
+      named after the listing, e.g. <code>4565863595.json</code>.</li>
+    <li>Put that file in <code>data/images/</code> in the repo. On GitHub:
+      open the <code>data/images</code> folder →
+      <strong>Add file → Upload files</strong> → drag it in from Downloads →
+      commit. No renaming needed.</li>
+    <li>Run the sync — the gallery appears.</li>
+  </ol>
+  <p class="fine-print">If your browser blocks the download, it copies the same
+    text to the clipboard instead and tells you the filename to use.</p>
+
+  <h2>What's in the file</h2>
+  <pre><code>[
+  {
+    "url": "https://i.etsystatic.com/&hellip;/il_fullxfull.8503570133_1rfk.jpg",
+    "w": 3000,
+    "h": 2250
+  }
+]</code></pre>
+  <p>A plain list of URLs works too, if you'd rather paste them by hand — the
+    width and height are only used to reserve space while the image loads.</p>
+</section>

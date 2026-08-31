@@ -325,6 +325,97 @@ class TestEtsyApiImages(unittest.TestCase):
         self.assertIn("view 3", v["images"][2]["alt"])
 
 
+class TestManualImages(unittest.TestCase):
+    """Galleries captured in the browser (Etsy blocks servers from listing pages)."""
+
+    URL = "https://i.etsystatic.com/59829812/r/il/a00f5d/8503570133/il_fullxfull.8503570133_1rfk.jpg"
+
+    def write_gallery(self, directory, listing_id, payload):
+        os.makedirs(directory, exist_ok=True)
+        with open(os.path.join(directory, "%s.json" % listing_id), "w", encoding="utf-8") as fh:
+            json.dump(payload, fh)
+
+    def test_fullxfull_urls_yield_a_srcset(self):
+        """Regression: an earlier size-token regex matched 570xN and 180x180 but
+        not fullxfull — which is the only shape the bookmarklet emits."""
+        base = m.image_base(self.URL)
+        self.assertIsNotNone(base, "fullxfull must be recognised")
+        self.assertIn("il_{size}", base)
+        self.assertIn("il_1140xN", m.srcset(base))
+
+    def test_all_etsy_size_tokens_recognised(self):
+        for token in ("il_570xN", "il_180x180", "il_fullxfull", "il_75x75"):
+            url = self.URL.replace("il_fullxfull", token)
+            self.assertIsNotNone(m.image_base(url), token)
+
+    def test_accepts_both_string_and_object_entries(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.write_gallery(d, "4565863595", [
+                self.URL,
+                {"url": self.URL.replace("8503570133", "8503570200"), "w": 3000, "h": 2250},
+            ])
+            galleries = m.load_manual_images(d)
+            images = galleries["4565863595"]
+            self.assertEqual(len(images), 2)
+            self.assertIsNone(images[0]["width"], "a bare URL carries no dimensions")
+            self.assertEqual((images[1]["width"], images[1]["height"]), (3000, 2250))
+
+    def test_captured_gallery_replaces_the_rss_photo(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.write_gallery(d, "4565863595", [self.URL, self.URL.replace("8503570133", "999")])
+            items, _ = m.parse_feed(FIX_FEED)
+            self.assertEqual(len(items[0]["images"]), 1)
+            applied = m.apply_manual_images(items, m.load_manual_images(d))
+            self.assertEqual(applied, ["4565863595"])
+            self.assertEqual(len(items[0]["images"]), 2)
+            self.assertEqual(items[0]["image_source"], "file")
+
+    def test_listing_without_a_file_keeps_its_rss_photo(self):
+        with tempfile.TemporaryDirectory() as d:
+            items, _ = m.parse_feed(FIX_FEED)
+            self.assertEqual(m.apply_manual_images(items, m.load_manual_images(d)), [])
+            self.assertEqual(items[0]["image_source"], "rss")
+            self.assertEqual(len(items[0]["images"]), 1)
+
+    def test_missing_directory_is_not_an_error(self):
+        self.assertEqual(m.load_manual_images("/nonexistent/path/images"), {})
+
+    def test_malformed_file_raises_rather_than_silently_dropping(self):
+        with tempfile.TemporaryDirectory() as d:
+            with open(os.path.join(d, "123.json"), "w", encoding="utf-8") as fh:
+                fh.write("{not json")
+            with self.assertRaises(ValueError):
+                m.load_manual_images(d)
+
+    def test_non_list_file_raises(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.write_gallery(d, "123", {"url": self.URL})
+            with self.assertRaises(ValueError):
+                m.load_manual_images(d)
+
+    def test_readme_and_junk_files_ignored(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.write_gallery(d, "4565863595", [self.URL])
+            with open(os.path.join(d, "README.txt"), "w", encoding="utf-8") as fh:
+                fh.write("not a gallery")
+            self.assertEqual(list(m.load_manual_images(d)), ["4565863595"])
+
+    def test_first_entry_becomes_the_cover(self):
+        with tempfile.TemporaryDirectory() as d:
+            second = self.URL.replace("8503570133", "8503570200")
+            self.write_gallery(d, "4565863595", [second, self.URL])
+            items, _ = m.parse_feed(FIX_FEED)
+            m.apply_manual_images(items, m.load_manual_images(d))
+            db, _ = m.merge(m.empty_db(), items, now="2026-08-31")
+            v = m.view(db["works"][0])
+            self.assertEqual(len(v["images"]), 2)
+            self.assertEqual(v["cover"]["full"], second, "first entry is the cover")
+            # Pasting full-resolution URLs must not put 400KB images in the grid:
+            # the display src is downsized, and only "view full size" uses the original.
+            self.assertIn("il_570xN", v["cover"]["src"])
+            self.assertIn("il_1140xN", v["cover"]["srcset"])
+
+
 class TestSyncScript(unittest.TestCase):
     """End-to-end via the CLI, using a local fixture instead of the network."""
 
@@ -335,7 +426,9 @@ class TestSyncScript(unittest.TestCase):
         try:
             return subprocess.run(
                 [sys.executable, os.path.join(ROOT, "scripts", "sync_etsy.py"),
-                 "--source", feed, "--out", out, "--no-heartbeat", *extra],
+                 "--source", feed, "--out", out, "--no-heartbeat",
+                 # isolate from the repo's real captured galleries
+                 "--images-dir", os.path.join(os.path.dirname(out), "images"), *extra],
                 capture_output=True, text=True,
             )
         finally:

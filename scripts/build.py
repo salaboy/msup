@@ -76,6 +76,31 @@ def json_ld(obj):
     return blob.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
 
 
+def bookmarklet(path):
+    """Turn tools/grab-photos.js into a javascript: URL.
+
+    No minifier: comments are stripped and the rest is percent-encoded with
+    newlines intact, which keeps `//` comments harmless and avoids the risk of
+    a hand-rolled minifier mangling a regex. Only block comments that start a
+    line are removed, so `/*` inside a string or regex is never touched.
+    """
+    out, skipping = [], False
+    for line in read(path).splitlines():
+        stripped = line.strip()
+        if skipping:
+            if "*/" in stripped:
+                skipping = False
+            continue
+        if stripped.startswith("/*"):
+            if "*/" not in stripped:
+                skipping = True
+            continue
+        if stripped.startswith("//") or not stripped:
+            continue
+        out.append(stripped)
+    return "javascript:" + urllib.parse.quote("\n".join(out), safe="")
+
+
 class Site:
     def __init__(self, cfg, db, out):
         self.cfg = cfg
@@ -108,7 +133,7 @@ class Site:
 
     def render_page(self, out_path, main_html, title, description,
                     og_type="website", og_image=None, head_extra_html="",
-                    active=None, changefreq="monthly"):
+                    active=None, changefreq="monthly", in_sitemap=True):
         rel = rel_prefix(out_path)
         url_path = out_path[: -len("index.html")] if out_path.endswith("index.html") else out_path
         canonical = urllib.parse.urljoin(self.base_url, url_path)
@@ -131,7 +156,8 @@ class Site:
             main_html=main_html,
         )
         self.write(out_path, page)
-        self.pages.append((canonical, changefreq))
+        if in_sitemap:
+            self.pages.append((canonical, changefreq))
 
     def write(self, out_path, text):
         full = os.path.join(self.out, out_path)
@@ -396,6 +422,20 @@ class Site:
 
         for work in works:
             self.build_work_page(work)
+
+        # Setup page for the photo bookmarklet. Not in the nav or the sitemap —
+        # it exists so the artist can reach it from any device.
+        tools = template("tools.html").safe_substitute(
+            rel="../",
+            bookmarklet_href=esc(bookmarklet(os.path.join(ROOT, "tools", "grab-photos.js"))),
+        )
+        self.render_page(
+            "tools/index.html", tools,
+            title="Add photos — %s" % self.cfg["title"],
+            description="Internal helper for adding artwork photos.",
+            head_extra_html='<meta name="robots" content="noindex, nofollow">',
+            in_sitemap=False,
+        )
 
         about = template("about.html").safe_substitute(
             rel="../",

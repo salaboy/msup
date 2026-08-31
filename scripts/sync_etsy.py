@@ -29,6 +29,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_OUT = os.path.join(ROOT, "data", "works.json")
 HEARTBEAT = os.path.join(ROOT, "data", ".heartbeat")
 ARCHIVE_DIR = os.path.join(ROOT, "static", "works")
+IMAGES_DIR = os.path.join(ROOT, "data", "images")
 
 
 def load_db(path):
@@ -181,6 +182,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--source", default=m.DEFAULT_FEED, help="feed URL or local file")
     ap.add_argument("--out", default=DEFAULT_OUT, help="path to works.json")
+    ap.add_argument("--images-dir", default=IMAGES_DIR,
+                    help="directory of <listing_id>.json gallery files")
     ap.add_argument("--dry-run", action="store_true", help="show the diff, write nothing")
     ap.add_argument(
         "--allow-empty",
@@ -197,8 +200,8 @@ def main(argv=None):
     ap.add_argument(
         "--etsy-api-key",
         default=os.environ.get("ETSY_API_KEY"),
-        help="Etsy API keystring; enables multi-image galleries. "
-             "Defaults to the ETSY_API_KEY environment variable.",
+        help="Etsy API keystring, if you ever get one. Captured galleries in "
+             "--images-dir take precedence. Defaults to $ETSY_API_KEY.",
     )
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args(argv)
@@ -215,14 +218,31 @@ def main(argv=None):
 
     db, bootstrapped = load_db(args.out)
 
+    # Captured galleries win over both RSS and the API: they are the artist's
+    # explicit choice of which photos to show, in which order.
+    try:
+        galleries = m.load_manual_images(args.images_dir)
+    except ValueError as exc:
+        sys.stderr.write("error: %s\n" % exc)
+        return 2
+
     if args.etsy_api_key and items:
         n = enrich_images(items, args.etsy_api_key, args.verbose)
         if args.verbose:
-            sys.stderr.write("enriched %d/%d listings with full galleries\n" % (n, len(items)))
-    elif items:
+            sys.stderr.write("enriched %d/%d listings from the Etsy API\n" % (n, len(items)))
+
+    applied = m.apply_manual_images(items, galleries)
+    if args.verbose and applied:
+        sys.stderr.write("used captured galleries for: %s\n" % ", ".join(applied))
+
+    missing = [i["listing_id"] for i in items
+               if i["image_source"] == "rss" and len(i["images"]) < 2]
+    if missing:
         sys.stderr.write(
-            "note: no Etsy API key, so each piece has only its main photo.\n"
-            "      Set ETSY_API_KEY to pull full galleries (see README).\n"
+            "note: only one photo for %s.\n"
+            "      Grab the rest with the bookmarklet (see README) and save them to\n"
+            "      %s/<listing_id>.json\n"
+            % (", ".join(missing), os.path.relpath(args.images_dir, ROOT))
         )
 
     before_text = "" if bootstrapped else m.dumps(db)
