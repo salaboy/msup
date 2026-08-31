@@ -1,0 +1,21 @@
+{
+  "title": "Maryland Supreme",
+  "tagline": "Hand drawn originals",
+  "description": "Original hand drawn work by Maryland Supreme (Mauricio Salatino), exploring the interconnections between the natural world and the unknown.",
+  "author": "Mauricio Salatino",
+  "base_url": "https://salaboy.github.io/msup/",
+  "base_path": "/msup/",
+  "etsy_shop": "MSupShop",
+  "etsy_shop_url": "https://www.etsy.com/shop/MSupShop",
+  "instagram_url": "https://instagram.com/marylandsupreme",
+  "nav": [
+    {
+      "label": "Work",
+      "path": "works/"
+    },
+    {
+      "label": "About",
+      "path": "about/"
+    }
+  ]
+}

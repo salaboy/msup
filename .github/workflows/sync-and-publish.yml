@@ -1,0 +1,99 @@
+name: Sync Etsy and publish
+
+# Sync, build and deploy all happen in ONE run, chained by `needs:` rather than
+# by a git event. That is deliberate: commits made with GITHUB_TOKEN do not
+# trigger further workflow runs, so a "sync commits, push-triggered workflow
+# deploys" split would silently never publish a sold-out change.
+#
+# The same rule means this workflow's own push cannot cause an infinite loop.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview changes without committing or deploying"
+        type: boolean
+        default: false
+      allow_empty:
+        description: "Permit an empty feed to mark every work sold (rare — see README)"
+        type: boolean
+        default: false
+      archive_images:
+        description: "Save a local copy of a piece's photo when it sells"
+        type: boolean
+        default: false
+  schedule:
+    # 06:17 UTC. Off-the-hour on purpose: scheduled runs at :00 queue behind the
+    # whole platform and get delayed worst.
+    - cron: "17 6 * * *"
+
+permissions:
+  contents: write   # commit data/works.json
+  pages: write      # deploy
+  id-token: write   # OIDC — deploy-pages fails without this
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  sync-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync from Etsy RSS
+        id: sync
+        env:
+          # Optional. Without it each piece shows only its main photo; with it
+          # the sync pulls the full gallery for every listing.
+          ETSY_API_KEY: ${{ secrets.ETSY_API_KEY }}
+        run: |
+          set -euo pipefail
+          ARGS=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          if [ "${{ inputs.allow_empty }}" = "true" ]; then ARGS="$ARGS --allow-empty"; fi
+          if [ "${{ inputs.archive_images }}" = "true" ]; then ARGS="$ARGS --archive-images"; fi
+          python3 scripts/sync_etsy.py --check $ARGS | tee sync-report.txt
+          {
+            echo '## Etsy sync'
+            echo '```'
+            cat sync-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if git diff --quiet -- data/; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          rm -f sync-report.txt
+
+      - name: Commit updated works
+        if: steps.sync.outputs.changed == 'true' && inputs.dry_run != true
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git commit -m "chore(sync): update works from Etsy"
+          git push
+
+      - name: Build site
+        run: python3 scripts/build.py
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: sync-and-build
+    if: inputs.dry_run != true
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

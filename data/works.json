@@ -1,0 +1,59 @@
+{
+  "schema_version": 2,
+  "source_feed": "https://www.etsy.com/shop/MSupShop/rss",
+  "works": [
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {},
+        "fields": {
+          "description": "The weekend is over and you need to start fixing your life. Time to get your stuff in order and check more items from your infinite TODO list.",
+          "framed": "Recycled Frame",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "FIX",
+          "type": "hand drawn original"
+        },
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/a00f5d/8503570133/il_{size}.8503570133_1rfk.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/a00f5d/8503570133/il_570xN.8503570133_1rfk.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4565863595",
+        "price": {
+          "amount": "25.00",
+          "currency": "GBP",
+          "raw": "25.00 GBP"
+        },
+        "pub_date": "2026-08-31",
+        "slug": "fix",
+        "title": "FIX",
+        "url": "https://www.etsy.com/listing/4565863595/fix"
+      },
+      "id": "4565863595",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-08-31",
+        "relisted_at": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found — $site_title</title>
+<meta name="robots" content="noindex">
+<!-- GitHub Pages serves this one file for a 404 at ANY depth, so relative asset
+     paths would resolve differently depending on the URL that failed. These must
+     be base_path-absolute or the error page renders unstyled about half the time. -->
+<link rel="icon" href="${base_path}favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="${base_path}style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <a class="brand" href="$base_path">
+    <span class="brand-name">Maryland Supreme</span>
+    <span class="brand-mark" aria-hidden="true">MSup!</span>
+  </a>
+</header>
+<main id="main" tabindex="-1">
+  <h1>Page not found</h1>
+  <p class="lede">That page doesn't exist — it may have moved when the site did.</p>
+  <p class="work-actions">
+    <a class="button" href="${base_path}works/">See the work</a>
+    <a class="button button-quiet" href="$base_path">Home</a>
+  </p>
+</main>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <a class="footer-brand" href="$base_path">
+      <img src="${base_path}mslogo.png" alt="" width="44" height="44">
+      <span>Maryland Supreme</span>
+    </a>
+    <ul class="footer-links">
+      <li><a href="$etsy_shop_url" rel="noopener">Buy on Etsy</a></li>
+      <li><a href="$instagram_url" rel="noopener">Instagram</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>$page_title</title>
+<meta name="description" content="$page_description">
+<link rel="canonical" href="$canonical">
+<meta property="og:type" content="$og_type">
+<meta property="og:title" content="$page_title">
+<meta property="og:description" content="$page_description">
+<meta property="og:url" content="$canonical">
+<meta property="og:site_name" content="$site_title">
+$og_image_html
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="${rel}favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="${rel}mslogo.png">
+<link rel="stylesheet" href="${rel}style.css">
+$head_extra_html
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+$nav_html
+<main id="main" tabindex="-1">
+$main_html
+</main>
+$footer_html
+<script>
+/* Etsy images are hotlinked. If a listing is ever deleted its image 404s, so
+   swap in a placeholder rather than leaving a broken icon in the grid. */
+document.addEventListener('error', function (e) {
+  var img = e.target;
+  if (img.tagName !== 'IMG' || img.dataset.fallbackApplied) return;
+  img.dataset.fallbackApplied = '1';
+  img.removeAttribute('srcset');
+  img.src = '${rel}img/placeholder.svg';
+  if (img.closest('figure')) img.closest('figure').classList.add('img-missing');
+}, true);
+</script>
+</body>
+</html>
