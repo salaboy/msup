@@ -300,6 +300,123 @@
         "first_seen": "2026-09-01",
         "relisted_at": null
       }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": "Sabiduría Universal (Universal Understandings), covers the work for Maryland Supreme and Sebastian Andia between 2023-2024. The artwork covered in this printed booklet was produced as a collaboration mixing both styles over more than 40 original drawings.",
+        "extra_fields": {},
+        "fields": {},
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/1a91c5/8462315524/il_{size}.8462315524_aj6k.jpg",
+            "height": 505,
+            "src": "https://i.etsystatic.com/59829812/r/il/1a91c5/8462315524/il_fullxfull.8462315524_aj6k.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/c9295d/8462315244/il_{size}.8462315244_5h9a.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/c9295d/8462315244/il_fullxfull.8462315244_5h9a.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/6a3676/8510174515/il_{size}.8510174515_b3z6.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/6a3676/8510174515/il_fullxfull.8510174515_b3z6.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/b854b2/8510174517/il_{size}.8510174517_tavc.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/b854b2/8510174517/il_fullxfull.8510174517_tavc.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/8fbe47/8462315282/il_{size}.8462315282_3x73.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/8fbe47/8462315282/il_fullxfull.8462315282_3x73.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/fc75e0/8462315280/il_{size}.8462315280_o43g.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/fc75e0/8462315280/il_fullxfull.8462315280_o43g.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/6d6e54/8462315294/il_{size}.8462315294_qcdd.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/6d6e54/8462315294/il_fullxfull.8462315294_qcdd.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/7961fa/8462315290/il_{size}.8462315290_6nvu.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/7961fa/8462315290/il_fullxfull.8462315290_6nvu.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/64817b/8510174229/il_{size}.8510174229_6tos.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/64817b/8510174229/il_fullxfull.8510174229_6tos.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/01716b/8510174245/il_{size}.8510174245_hcav.jpg",
+            "height": 526,
+            "src": "https://i.etsystatic.com/59829812/r/il/01716b/8510174245/il_fullxfull.8510174245_hcav.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/6130b4/8462315508/il_{size}.8462315508_jxb8.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/6130b4/8462315508/il_fullxfull.8462315508_jxb8.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4566729965",
+        "price": {
+          "amount": "30.00",
+          "currency": "GBP",
+          "raw": "30.00 GBP"
+        },
+        "pub_date": "2026-09-01",
+        "slug": "sabiduria-universal-2024-book-art",
+        "title": "Sabiduría Universal - 2024 (book , art, drawings)",
+        "url": "https://www.etsy.com/listing/4566729965/sabiduria-universal-2024-book-art"
+      },
+      "id": "4566729965",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-09-01",
+        "relisted_at": null
+      }
     }
   ]
 }
