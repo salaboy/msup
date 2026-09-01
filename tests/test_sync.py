@@ -440,6 +440,31 @@ class TestManualImages(unittest.TestCase):
         self.assertEqual(m.apply_manual_images_to_db(db, {"4565863595": [{"src": self.URL}]}), [])
 
 
+class TestAnalytics(unittest.TestCase):
+    """The measurement ID is interpolated into JavaScript, so it is validated
+    rather than escaped — a non-ID value is refused outright."""
+
+    def setUp(self):
+        sys.path.insert(0, os.path.join(ROOT, "scripts"))
+        import build
+        self.snippet = build.analytics_snippet
+
+    def test_no_id_emits_nothing(self):
+        self.assertEqual(self.snippet(""), "")
+        self.assertEqual(self.snippet(None), "")
+
+    def test_valid_id_emits_gtag_once(self):
+        out = self.snippet("G-ABC1234XYZ")
+        self.assertIn("googletagmanager.com/gtag/js?id=G-ABC1234XYZ", out)
+        self.assertIn("gtag('config', 'G-ABC1234XYZ')", out)
+
+    def test_injection_attempts_are_refused(self):
+        for bad in ("'); alert(1); //", "<script>x</script>", "UA-12345-1",
+                    "G-OK'+document.cookie+'"):
+            with self.assertRaises(ValueError, msg=bad):
+                self.snippet(bad)
+
+
 class TestSyncScript(unittest.TestCase):
     """End-to-end via the CLI, using a local fixture instead of the network."""
 

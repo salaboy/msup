@@ -18,6 +18,7 @@ import argparse
 import html
 import json
 import os
+import re
 import shutil
 import sys
 import urllib.parse
@@ -102,6 +103,33 @@ def bookmarklet(path):
     return "javascript:" + urllib.parse.quote("\n".join(out), safe="")
 
 
+GA_ID_RE = re.compile(r"^G-[A-Z0-9]{4,20}$", re.I)
+
+
+def analytics_snippet(measurement_id):
+    """GA4 gtag.js, or "" when no ID is configured.
+
+    The ID is interpolated into JavaScript, so it is validated against GA4's
+    format rather than escaped — anything that isn't a plain measurement ID is
+    refused outright, which removes the injection path entirely.
+    """
+    if not measurement_id:
+        return ""
+    if not GA_ID_RE.match(measurement_id):
+        raise ValueError(
+            "google_analytics must look like 'G-XXXXXXXXXX', got %r" % measurement_id
+        )
+    return (
+        '<script async src="https://www.googletagmanager.com/gtag/js?id=%s"></script>\n'
+        "<script>\n"
+        "window.dataLayer = window.dataLayer || [];\n"
+        "function gtag(){dataLayer.push(arguments);}\n"
+        "gtag('js', new Date());\n"
+        "gtag('config', '%s');\n"
+        "</script>" % (measurement_id, measurement_id)
+    )
+
+
 class Site:
     def __init__(self, cfg, db, out):
         self.cfg = cfg
@@ -109,6 +137,7 @@ class Site:
         self.out = out
         self.base_url = cfg["base_url"]
         self.base_path = cfg["base_path"]
+        self.analytics_html = analytics_snippet(cfg.get("google_analytics", ""))
         self.pages = []  # (absolute url, changefreq) for the sitemap
 
     # -- shared chrome ---------------------------------------------------
@@ -152,6 +181,7 @@ class Site:
             og_type=esc(og_type),
             og_image_html=og_image_html,
             head_extra_html=head_extra_html,
+            analytics_html=self.analytics_html,
             nav_html=self.nav(rel, active),
             footer_html=self.footer(rel),
             main_html=main_html,
@@ -454,6 +484,7 @@ class Site:
 
         # 404 — base_path-absolute, never relative (see module docstring)
         self.write("404.html", template("404.html").safe_substitute(
+            analytics_html=self.analytics_html,
             base_path=esc(self.base_path),
             site_title=esc(self.cfg["title"]),
             etsy_shop_url=esc(self.cfg["etsy_shop_url"]),

@@ -76,6 +76,24 @@ original for "view full size".
 <sub>If Etsy ever grants you an API key, set `ETSY_API_KEY` as a repo secret and
 the sync will pull galleries automatically — captured files still win.</sub>
 
+## Analytics
+
+Google Analytics 4 is wired in but **off until you add your ID**. Put your
+measurement ID in `data/site.json`:
+
+```json
+"google_analytics": "G-XXXXXXXXXX"
+```
+
+Find it in GA under **Admin → Data streams → your web stream → Measurement ID**.
+Commit, and the tag goes onto every page including the 404. Leave it empty and
+no tracking code is emitted at all.
+
+> **Note:** this loads Google's tag immediately, which sets cookies before the
+> visitor has agreed to anything. That's the common setup, but it isn't strictly
+> compliant with UK/EU cookie rules. If you ever want to fix that, the options
+> are a consent banner or a cookieless counter — ask and I'll switch it over.
+
 ## When something sells
 
 Nothing to do. Etsy drops sold listings from the feed, the sync notices, and
@@ -109,7 +127,7 @@ Edit it directly on GitHub and the site rebuilds on save.
 python3 scripts/serve.py                 # build + preview at localhost:8000/msup/
 python3 scripts/sync_etsy.py --dry-run   # show what a sync would change
 python3 scripts/build.py                 # build into _site/
-python3 -m unittest discover -s tests    # 45 tests, no network needed
+python3 -m unittest discover -s tests    # 50 tests, no network needed
 ```
 
 `_site/` is generated and gitignored — never edit it. The only file the sync
@@ -133,7 +151,7 @@ data/images/*.json┘      (upsert)     (source of truth)   (templates/)
 | `scripts/build.py` | `works.json` + `templates/` → `_site/`. |
 | `tools/grab-photos.js` | The bookmarklet source, compiled into `/tools/` at build time. |
 | `data/images/` | Captured galleries, one file per listing. Yours to edit. Applied by both the sync and the build, so committing one is enough. |
-| `data/site.json` | Titles, URLs, nav. |
+| `data/site.json` | Titles, URLs, nav, analytics ID. |
 | `content/*.txt` | Bio and page intro, as plain text. |
 
 ### Why the site is built this way
