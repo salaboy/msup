@@ -417,6 +417,95 @@
         "first_seen": "2026-09-01",
         "relisted_at": null
       }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": "This booklet covers the works of Maryland Supreme between 2013 and 2023. A wide range of styles and characters are discovered as part of a natural artistic exploration to find shapes and colors that work together.",
+        "extra_fields": {},
+        "fields": {},
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/ff7d9d/8462700468/il_{size}.8462700468_n16e.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/ff7d9d/8462700468/il_fullxfull.8462700468_n16e.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/1b29c2/8462700300/il_{size}.8462700300_awj6.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/1b29c2/8462700300/il_fullxfull.8462700300_awj6.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/cff72a/8462700292/il_{size}.8462700292_rez7.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/cff72a/8462700292/il_fullxfull.8462700292_rez7.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/c90689/8510559235/il_{size}.8510559235_21yo.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/c90689/8510559235/il_fullxfull.8510559235_21yo.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/119e7c/8510559259/il_{size}.8510559259_fgai.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/119e7c/8510559259/il_fullxfull.8510559259_fgai.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/086f4c/8510559239/il_{size}.8510559239_sr1p.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/086f4c/8510559239/il_fullxfull.8510559239_sr1p.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/4bcef4/8510559231/il_{size}.8510559231_ll0n.jpg",
+            "height": 529,
+            "src": "https://i.etsystatic.com/59829812/r/il/4bcef4/8510559231/il_fullxfull.8510559231_ll0n.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4566781327",
+        "price": {
+          "amount": "30.00",
+          "currency": "GBP",
+          "raw": "30.00 GBP"
+        },
+        "pub_date": "2026-09-01",
+        "slug": "maryland-supreme-10th-year-anniversary1788284423",
+        "title": "Maryland Supreme 10th Year Anniversary Catalog 2023 (book , art, drawings)",
+        "url": "https://www.etsy.com/listing/4566781327/maryland-supreme-10th-year-anniversary1788284423"
+      },
+      "id": "4566781327",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-09-01",
+        "relisted_at": null
+      }
     }
   ]
 }
