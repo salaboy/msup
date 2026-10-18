@@ -131,6 +131,10 @@ h2 { font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem); font-weight: 600; letter
 .site-header nav ul {
   list-style: none;
   display: flex;
+  /* Wraps because a collection adds a third item: two fit a 320px screen,
+     three do not, and .site-header's own wrap only moves the whole nav
+     below the brand. */
+  flex-wrap: wrap;
   gap: clamp(1rem, 3vw, 2rem);
   margin: 0;
   padding: 0;
@@ -154,6 +158,37 @@ h2 { font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem); font-weight: 600; letter
 /* ---------- hero ---------- */
 
 .hero { display: grid; gap: 1rem; }
+
+/* ---------- collection banner ---------- */
+
+/* Image beside text, stacking on a phone — the same shape as .work-detail,
+   including minmax(0, 1fr) rather than 1fr: a grid item defaults to
+   min-width:auto, so the banner would refuse to shrink below its intrinsic
+   width and push the page wider than the screen. */
+.collection-banner {
+  display: grid;
+  gap: clamp(1.75rem, 4vw, 3.5rem);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+}
+.collection-banner > * { min-width: 0; }
+
+@media (min-width: 900px) {
+  .collection-banner { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+}
+
+.banner-frame {
+  background: var(--well);
+  overflow: hidden;
+  border-radius: var(--radius);
+  aspect-ratio: 3 / 2;
+}
+.banner-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+.banner-text { display: grid; gap: 1rem; justify-items: start; }
+.banner-text > h1, .banner-text > h2 { margin: 0; }
+.banner-text .lede { max-width: 38ch; }
+.banner-text p { margin: 0; }
 
 /* ---------- work grid ---------- */
 
@@ -343,6 +378,11 @@ figcaption { margin-top: 0.9rem; display: grid; gap: 0.15rem; }
 .work-info h1 { font-size: clamp(1.75rem, 1.3rem + 1.8vw, 2.5rem); margin-bottom: 0.35em; }
 
 .breadcrumb { font-size: 0.875rem; color: var(--ink-soft); margin: 0 0 1.25rem; }
+
+/* "Part of <collection>" sits directly under the breadcrumb as a second line,
+   so the breadcrumb's own gap closes up when one is present. */
+.breadcrumb:has(+ .work-collection) { margin-bottom: 0.25rem; }
+.work-collection { font-size: 0.875rem; color: var(--ink-soft); margin: 0 0 1.25rem; }
 
 .work-status {
   font-size: 0.6875rem;

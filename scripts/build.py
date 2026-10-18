@@ -105,6 +105,102 @@ def bookmarklet(path):
 
 GA_ID_RE = re.compile(r"^G-[A-Z0-9]{4,20}$", re.I)
 
+# A collection slug becomes a directory name and a URL path, so it is validated
+# rather than escaped — see collections() for why that distinction matters.
+COLLECTION_SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+
+
+def collections(cfg):
+    """Validate and normalise cfg['collections'].
+
+    The slug typed into an Etsy listing is only ever a *lookup key* into this
+    mapping; every path, href and canonical URL is built from the slug
+    configured here. That makes `Collection: ../../../tools` structurally
+    incapable of escaping the output tree, rather than relying on slugify()
+    happening to neutralise it.
+
+    A malformed slug or banner path is refused outright, following
+    analytics_snippet: these values are interpolated into paths, where
+    escaping is not the right tool.
+    """
+    out, seen = [], set()
+    for entry in cfg.get("collections") or []:
+        coll = dict(entry)
+        slug = (coll.get("slug") or "").strip()
+        if not COLLECTION_SLUG_RE.match(slug):
+            raise ValueError(
+                "collection slug must be lowercase words joined by '-', got %r" % slug
+            )
+        if slug in seen:
+            raise ValueError("duplicate collection slug %r — one would overwrite the other" % slug)
+        seen.add(slug)
+
+        banner = (coll.get("banner") or "").strip()
+        if banner.startswith("/"):
+            # A leading slash breaks both consumers: rel + "/img/…" yields a
+            # doubled slash, and urljoin() would resolve it against the host
+            # root, escaping base_path on the project-pages URL.
+            raise ValueError(
+                "collection banner must be site-root-relative with no leading '/', got %r" % banner
+            )
+
+        coll["slug"] = slug
+        coll["banner"] = banner
+        coll["title"] = coll.get("title") or slug
+        coll["path"] = "collections/%s/" % slug
+        out.append(coll)
+    return out
+
+
+def collection_keys(colls):
+    """Map the slug of an Etsy `Collection:` label to its collection.
+
+    Both the configured slug and the configured *title* are accepted as keys.
+    On Etsy the artist types the title — "Collection: Winter Series" — while
+    the slug is a URL choice that may be shorter, and nothing on the listing
+    hints at it. Matching the title too means the two cannot silently drift
+    apart.
+
+    Explicit slugs are registered first so a title alias can never shadow
+    another collection's real slug.
+    """
+    keys = {c["slug"]: c for c in colls}
+    for coll in colls:
+        alias = m.slugify(coll["title"])
+        if alias:
+            keys.setdefault(alias, coll)
+    return keys
+
+
+def collection_members(views, keys):
+    """Group works by resolved collection, keyed by configured slug.
+
+    A filter over visible_works()' canonical order, never a re-sort: a piece
+    sits in the same position on its collection page as it does on /works/,
+    which is what curation.order is for. Resolution goes through `keys` so the
+    grid and the work page's back-link can never disagree about membership.
+    """
+    members = {}
+    for work in views:
+        coll = keys.get(work["collection"]) if work["collection"] else None
+        if coll:
+            members.setdefault(coll["slug"], []).append(work)
+    return members
+
+
+def nav_entries(cfg, colls):
+    """Primary nav: site.json's own entries with in_nav collections spliced in
+    just before About, which reads better last."""
+    items = [dict(e) for e in cfg["nav"]]
+    extra = [
+        {"label": c.get("nav_label") or c["title"], "path": c["path"]}
+        for c in colls if c.get("in_nav")
+    ]
+    if not extra:
+        return items
+    cut = next((i for i, e in enumerate(items) if e["path"] == "about/"), len(items))
+    return items[:cut] + extra + items[cut:]
+
 
 def analytics_snippet(measurement_id):
     """GA4 gtag.js, or "" when no ID is configured.
@@ -139,12 +235,20 @@ class Site:
         self.base_path = cfg["base_path"]
         self.analytics_html = analytics_snippet(cfg.get("google_analytics", ""))
         self.pages = []  # (absolute url, changefreq) for the sitemap
+        # Collections are resolved here rather than in main() so that the
+        # rendered site stays a pure function of the cfg dict — constructible
+        # in a test, and immune to main() being called twice in one process
+        # (serve.py imports and calls it).
+        self.collections = collections(cfg)
+        self.by_collection = collection_keys(self.collections)
+        self.nav_items = nav_entries(cfg, self.collections)
+        self.warnings = []
 
     # -- shared chrome ---------------------------------------------------
 
     def nav(self, rel, active):
         items = []
-        for entry in self.cfg["nav"]:
+        for entry in self.nav_items:
             current = ' aria-current="page"' if entry["path"] == active else ""
             items.append(
                 '      <li><a href="%s%s"%s>%s</a></li>'
@@ -317,6 +421,89 @@ class Site:
     def grid(self, works, rel):
         return "\n".join(self.card(w, rel) for w in works)
 
+    # -- collections -----------------------------------------------------
+
+    def collection_banner(self, coll, rel, heading_html, cta_html=""):
+        """One collection banner, rendered per page.
+
+        `rel` is an argument rather than something baked in once: the home
+        teaser renders at '' and the collection page at '../../', so a shared
+        pre-rendered string would ship a broken image on one of the two.
+        """
+        dims = ""
+        if coll.get("banner_width") and coll.get("banner_height"):
+            dims = ' width="%d" height="%d"' % (
+                int(coll["banner_width"]), int(coll["banner_height"])
+            )
+        return template("partials/collection_banner.html").safe_substitute(
+            banner_src=esc(rel + coll["banner"]),
+            # No fallback to the title: that would read the <h1> twice to a
+            # screen reader. An unset alt means the banner is decorative.
+            banner_alt=esc(coll.get("banner_alt") or ""),
+            dim_attrs=dims,
+            heading_html=heading_html,
+            intro_html='<p class="lede">%s</p>' % esc(coll["intro"]) if coll.get("intro") else "",
+            cta_html=cta_html,
+        )
+
+    def build_collection_page(self, coll, works):
+        out_path = "collections/%s/index.html" % coll["slug"]
+        rel = rel_prefix(out_path)
+
+        main_html = template("collection.html").safe_substitute(
+            rel=rel,
+            banner_html=self.collection_banner(coll, rel, "<h1>%s</h1>" % esc(coll["title"])),
+            works_html=self.grid(works, rel),
+            empty_html="" if works else
+            '<p class="empty-note">Nothing from this collection is listed right now.</p>',
+            etsy_shop_url=esc(self.cfg["etsy_shop_url"]),
+        )
+
+        ld = {
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": coll["title"],
+            "url": urllib.parse.urljoin(self.base_url, coll["path"]),
+            "mainEntity": {
+                "@type": "ItemList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": i + 1,
+                        "url": urllib.parse.urljoin(self.base_url, "works/%s/" % w["slug"]),
+                        "name": w["title"],
+                    }
+                    for i, w in enumerate(works)
+                ],
+            },
+        }
+        if coll.get("intro"):
+            ld["description"] = coll["intro"]
+
+        summary = coll.get("intro") or "%s — a collection by %s." % (coll["title"], self.cfg["title"])
+        self.render_page(
+            out_path, main_html,
+            title="%s — %s" % (coll["title"], self.cfg["title"]),
+            description=summary[:300],
+            og_image=urllib.parse.urljoin(self.base_url, coll["banner"]) if coll["banner"] else None,
+            head_extra_html='<script type="application/ld+json">%s</script>' % json_ld(ld),
+            active=coll["path"], changefreq="weekly",
+        )
+
+    def check_banner(self, coll):
+        """Warn about a banner that will 404.
+
+        The static copy loop validates nothing, and base.html's onerror
+        placeholder is styled for `figure.img-missing .frame` — outside one it
+        degrades badly, so a missing banner should be loud at build time.
+        """
+        if not coll["banner"]:
+            self.warnings.append("collection %r has no banner image" % coll["slug"])
+        elif not os.path.exists(os.path.join(STATIC, coll["banner"])):
+            self.warnings.append(
+                "collection %r: banner missing — expected static/%s" % (coll["slug"], coll["banner"])
+            )
+
     def build_work_page(self, work):
         out_path = "works/%s/index.html" % work["slug"]
         rel = rel_prefix(out_path)
@@ -336,11 +523,30 @@ class Site:
             for p in (work["description"] or "").split("\n") if p.strip()
         )
 
+        # A resolved collection is rendered as a link using the *configured*
+        # title, so no Etsy-authored text reaches the page at all, and its
+        # spec row is dropped — here rather than in view(), so that an
+        # unrecognised label degrades to the current behaviour instead of
+        # losing the artist's text.
+        coll = self.by_collection.get(work["collection"])
+        details = work["details"]
+        collection_html = ""
+        if coll:
+            details = [(k, v) for k, v in details if k.strip().lower() != m.COLLECTION_LABEL]
+            collection_html = '<p class="work-collection">Part of <a href="%s%s">%s</a></p>' % (
+                rel, esc(coll["path"]), esc(coll["title"])
+            )
+        elif work["collection"]:
+            self.warnings.append(
+                "%s: Collection %r matches no entry in site.json — shown as a plain detail row"
+                % (work["id"], work["collection_label"])
+            )
+
         details_html = ""
-        if work["details"]:
+        if details:
             rows = "\n".join(
                 "        <div><dt>%s</dt><dd>%s</dd></div>" % (esc(k), esc(v))
-                for k, v in work["details"]
+                for k, v in details
             )
             details_html = '<dl class="work-details">\n%s\n      </dl>' % rows
 
@@ -356,6 +562,7 @@ class Site:
             title=esc(work["title"]),
             status=esc(work["status"]),
             status_label=esc("Available" if work["available"] else "Sold"),
+            collection_html=collection_html,
             price_html=price_html,
             description_html=description_html,
             details_html=details_html,
@@ -388,7 +595,7 @@ class Site:
         if self.abs_img(work):
             ld["image"] = [i["full"] or i["src"] for i in work["images"] if not i.get("is_local")] \
                           or self.abs_img(work)
-        for key, value in work["details"]:
+        for key, value in details:
             if key.lower() == "type":
                 ld["artform"] = value
             elif key.lower() == "size":
@@ -412,10 +619,24 @@ class Site:
         available = [w for w in works if w["available"]]
         sold = [w for w in works if not w["available"]]
         featured = [w for w in available if w["featured"]] or available
+        members = collection_members(works, self.by_collection)
+
+        for coll in self.collections:
+            self.check_banner(coll)
+
+        home_banners = "\n".join(
+            self.collection_banner(
+                coll, "",
+                "<h2>%s</h2>" % esc(coll["title"]),
+                '<p><a class="button" href="%s">View the collection</a></p>' % esc(coll["path"]),
+            )
+            for coll in self.collections if coll.get("on_home")
+        )
 
         home = template("home.html").safe_substitute(
             rel="",
             home_intro=esc(read(os.path.join(CONTENT, "home_intro.txt")).strip()),
+            collection_banner_html=home_banners,
             works_html=self.grid(featured, ""),
             empty_html="" if featured else
             '<p class="empty-note">Nothing listed right now — new work is added as it goes up on Etsy.</p>',
@@ -453,6 +674,9 @@ class Site:
 
         for work in works:
             self.build_work_page(work)
+
+        for coll in self.collections:
+            self.build_collection_page(coll, members.get(coll["slug"], []))
 
         # Setup page for the photo bookmarklet. Not in the nav or the sitemap —
         # it exists so the artist can reach it from any device.
@@ -547,12 +771,25 @@ def main(argv=None):
     if applied and args.verbose:
         sys.stderr.write("applied captured galleries for: %s\n" % ", ".join(applied))
 
+    # Construct before wiping the output: a refused GA id or collection slug
+    # should not cost you the previous build.
+    try:
+        site = Site(cfg, db, args.out)
+    except ValueError as exc:
+        # A bad value is refused, not escaped — say so plainly instead of
+        # ending the run in a traceback.
+        sys.stderr.write("error: %s\n" % exc)
+        return 2
+
     if os.path.exists(args.out):
         shutil.rmtree(args.out)
     os.makedirs(args.out)
 
-    count = Site(cfg, db, args.out).build()
+    count = site.build()
     print("built %d pages into %s" % (count, os.path.relpath(args.out, ROOT)))
+    # Warnings go on stdout too: nobody reads the stderr of a green CI run.
+    for warning in site.warnings:
+        print("warning: %s" % warning)
     return 0
 
 

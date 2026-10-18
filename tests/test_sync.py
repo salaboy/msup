@@ -5,6 +5,7 @@ The FIX fixture is the real feed as returned by Etsy on 2026-08-31.
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -535,6 +536,249 @@ class TestSyncScript(unittest.TestCase):
             out = os.path.join(d, "works.json")
             self.run_sync(FIX_FEED, out)
             self.assertTrue(os.stat(out).st_mode & 0o044)
+
+
+class TestCollections(unittest.TestCase):
+    """A collection is declared from the phone, by typing `Collection: <Name>`
+    into the Etsy listing. These tests pin the data half of that contract."""
+
+    def work_with(self, label):
+        feed = feed_with(
+            '<p class="description">Title: T<br />Size: A3<br />Collection: %s</p>' % label
+        )
+        db, _ = m.merge(m.empty_db(), m.parse_feed(feed)[0], now="2026-08-31")
+        return db
+
+    def test_label_reaches_extra_fields_with_no_parser_change(self):
+        """The whole design rests on this: `Collection` is NOT a known label,
+        so it lands in extra_fields untouched and works.json never churns."""
+        self.assertNotIn("collection", m.KNOWN_LABELS)
+        work = self.work_with("Sabiduría Universal")["works"][0]
+        self.assertEqual(work["etsy"]["extra_fields"], {"Collection": "Sabiduría Universal"})
+
+    def test_slugify_flattens_accents_case_and_punctuation(self):
+        """One key per collection however it is typed on a phone keyboard."""
+        for typed in ("Sabiduría Universal", "sabiduria universal",
+                      "SABIDURÍA  UNIVERSAL", "  Sabiduría — Universal!  "):
+            self.assertEqual(m.slugify(typed), "sabiduria-universal", typed)
+
+    def test_slugify_returns_none_when_nothing_survives(self):
+        """An empty slug would make a `collections//` path constructible."""
+        self.assertIsNone(m.slugify(""))
+        self.assertIsNone(m.slugify(None))
+        self.assertIsNone(m.slugify("・・・"))
+
+    def test_label_match_is_case_insensitive(self):
+        """parse_description keeps the artist's capitalisation, so a lookup by
+        the exact key "Collection" would miss a listing typed in lower case."""
+        for key in ("Collection", "collection", "COLLECTION"):
+            self.assertEqual(m.collection_label({key: "Winter Series"}), "Winter Series")
+        self.assertIsNone(m.collection_label({"Edition": "2 of 5"}))
+        self.assertIsNone(m.collection_label(None))
+
+    def test_label_split_over_two_lines_is_joined(self):
+        """A continuation line appends "\\n" + line, which must not produce a
+        slug with an embedded dash where the line broke."""
+        work = self.work_with("Sabiduría<br />Universal")["works"][0]
+        self.assertEqual(m.view(work)["collection"], "sabiduria-universal")
+
+    def test_view_exposes_the_slug_but_keeps_the_detail_row(self):
+        """view() cannot tell a real collection from a typo — only build.py
+        knows what is configured — so it never drops the artist's text."""
+        v = m.view(self.work_with("Winter Series")["works"][0])
+        self.assertEqual(v["collection"], "winter-series")
+        self.assertEqual(v["collection_label"], "Winter Series")
+        self.assertIn(("Collection", "Winter Series"), v["details"])
+
+    def test_work_without_a_label_has_no_collection(self):
+        v = m.view(m.merge(m.empty_db(), m.parse_feed(FIX_FEED)[0])[0]["works"][0])
+        self.assertIsNone(v["collection"])
+        self.assertIsNone(v["collection_label"])
+
+
+class TestBuildCollections(unittest.TestCase):
+    """The rendering half. Site is constructed directly rather than through
+    the CLI so the output stays a pure function of the cfg dict."""
+
+    BANNER = "img/collections/winter.jpg"
+
+    def setUp(self):
+        import build
+        self.build = build
+
+    def cfg(self, collections, base_path="/", base_url="https://example.com/"):
+        return {
+            "title": "Maryland Supreme", "tagline": "Hand drawn originals",
+            "description": "Test site.", "author": "Mauricio Salatino",
+            "base_url": base_url, "base_path": base_path,
+            "etsy_shop_url": "https://www.etsy.com/shop/MSupShop",
+            "instagram_url": "https://instagram.com/marylandsupreme",
+            "google_analytics": "",
+            "nav": [{"label": "Work", "path": "works/"},
+                    {"label": "About", "path": "about/"}],
+            "collections": collections,
+        }
+
+    def collection(self, **over):
+        entry = {
+            "slug": "winter", "title": "Winter Series", "in_nav": True,
+            "on_home": True, "intro": "Drawings made over one winter.",
+            "banner": self.BANNER, "banner_alt": "A snow-covered page.",
+            "banner_width": 1600, "banner_height": 1067,
+        }
+        entry.update(over)
+        return entry
+
+    def db(self, label="Winter Series"):
+        feed = feed_with(
+            '<p class="description">Title: T<br />Size: A3<br />Collection: %s</p>' % label
+        )
+        db, _ = m.merge(m.empty_db(), m.parse_feed(feed)[0], now="2026-08-31")
+        return db
+
+    def render(self, collections, db=None, base_path="/", base_url="https://example.com/"):
+        """Build a whole site into a temp dir and return {path: html}."""
+        out = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, out, True)
+        site = self.build.Site(self.cfg(collections, base_path, base_url), db or self.db(), out)
+        site.build()
+        pages = {}
+        for root, _dirs, names in os.walk(out):
+            for name in names:
+                if name.endswith((".html", ".xml")):
+                    full = os.path.join(root, name)
+                    with open(full, encoding="utf-8") as fh:
+                        pages[os.path.relpath(full, out)] = fh.read()
+        return site, pages
+
+    def test_collection_page_lists_its_members(self):
+        _, pages = self.render([self.collection()])
+        page = pages["collections/winter/index.html"]
+        self.assertIn("Winter Series", page)
+        self.assertIn("Drawings made over one winter.", page)
+        self.assertIn('href="../../works/999-thing/"', page)
+
+    def test_banner_src_is_depth_relative_on_every_page(self):
+        """The one bug this feature invites: the home teaser renders at '' and
+        the collection page two levels down, so a shared pre-rendered banner
+        would ship a broken image on one of them."""
+        _, pages = self.render([self.collection()])
+        self.assertIn('src="%s"' % self.BANNER, pages["index.html"])
+        self.assertIn('src="../../%s"' % self.BANNER, pages["collections/winter/index.html"])
+
+    def test_no_internal_link_is_host_absolute(self):
+        """A relative-linked site is correct at both / and /msup/ with no
+        rebuild, which is what makes the domain cutover safe."""
+        for base_path, base_url in (("/", "https://example.com/"),
+                                    ("/msup/", "https://example.com/msup/")):
+            _, pages = self.render([self.collection()], base_path=base_path, base_url=base_url)
+            for path, html_text in pages.items():
+                if path in ("404.html", "sitemap.xml", "robots.txt"):
+                    continue  # 404 is base_path-absolute by design
+                self.assertNotIn('href="/', html_text, path)
+                self.assertNotIn('src="/', html_text, path)
+
+    def test_no_template_placeholder_survives(self):
+        """safe_substitute leaves an unknown $name in place silently, so a
+        typo'd slot would ship to production unnoticed."""
+        _, pages = self.render([self.collection()])
+        for path, html_text in pages.items():
+            self.assertNotRegex(html_text, r"\$[a-z_]+", path)
+
+    def test_nav_entry_sits_before_about_and_marks_the_current_page(self):
+        _, pages = self.render([self.collection()])
+        page = pages["collections/winter/index.html"]
+        self.assertIn('href="../../collections/winter/" aria-current="page"', page)
+        self.assertLess(page.index(">Winter Series<"), page.index(">About<"))
+        self.assertNotIn("aria-current", pages["works/index.html"].split("</nav>")[0]
+                         .replace('href="../works/" aria-current="page"', ""))
+
+    def test_member_work_page_links_back_and_drops_the_spec_row(self):
+        """A resolved collection reads better as a link than as a table row —
+        and the link uses the configured title, not the Etsy text."""
+        _, pages = self.render([self.collection()])
+        page = pages["works/999-thing/index.html"]
+        self.assertIn('Part of <a href="../../collections/winter/">Winter Series</a>', page)
+        self.assertNotIn("<dt>Collection</dt>", page)
+
+    def test_unmatched_label_degrades_to_a_plain_detail_row(self):
+        """A typo must cost the artist nothing: no page, nothing hidden, and a
+        warning loud enough to notice."""
+        site, pages = self.render([], db=self.db("Wintr Seriez"))
+        self.assertNotIn("collections/wintr-seriez/index.html", pages)
+        self.assertIn("<dt>Collection</dt>", pages["works/999-thing/index.html"])
+        self.assertTrue(any("matches no entry" in w for w in site.warnings))
+
+    def test_etsy_text_cannot_break_out_of_an_attribute(self):
+        """The label is third-party-authored, so it reaches the page only
+        through the one escaping entry point."""
+        site, pages = self.render([], db=self.db('Winter" onload=alert(1)'))
+        page = pages["works/999-thing/index.html"]
+        self.assertNotIn('Winter" onload', page, "the quote must not survive raw")
+        self.assertIn("Winter&quot; onload=alert(1)", page)
+        self.assertFalse(any(p.startswith("collections/") for p in pages))
+
+    def test_label_matches_the_title_not_just_the_url_slug(self):
+        """On Etsy the artist types the title; the slug is a URL choice the
+        listing gives no hint of. Both must resolve to the same collection."""
+        _, by_title = self.render([self.collection(slug="winter")])
+        self.assertIn("Part of", by_title["works/999-thing/index.html"])
+        _, by_slug = self.render([self.collection(slug="winter", title="Winter")],
+                                 db=self.db("Winter"))
+        self.assertIn("Part of", by_slug["works/999-thing/index.html"])
+
+    def test_membership_inherits_the_canonical_order(self):
+        """A piece must sit in the same position on its collection page as it
+        does on /works/, so membership filters rather than re-sorts."""
+        db = self.db("Winter Series")
+        second = json.loads(json.dumps(db["works"][0]))
+        second["id"] = "1111111111"
+        second["sync"]["first_seen"] = "2026-12-01"
+        second["curation"]["order"] = 1       # pushed to the front by curation
+        third = json.loads(json.dumps(db["works"][0]))
+        third["id"] = "2222222222"
+        third["etsy"]["extra_fields"] = {}    # not a member
+        db["works"] += [second, third]
+
+        colls = self.build.collections(self.cfg([self.collection()]))
+        members = self.build.collection_members(
+            m.visible_works(db), self.build.collection_keys(colls)
+        )
+        self.assertEqual([w["id"] for w in members["winter"]], ["1111111111", "999"])
+
+    def test_collection_page_is_in_the_sitemap_once(self):
+        _, pages = self.render([self.collection()])
+        self.assertEqual(pages["sitemap.xml"].count("https://example.com/collections/winter/"), 1)
+
+    def test_empty_collection_still_renders_its_banner(self):
+        _, pages = self.render([self.collection()], db=self.db("Something Else"))
+        page = pages["collections/winter/index.html"]
+        self.assertIn("empty-note", page)
+        self.assertIn(self.BANNER, page)
+
+    def test_missing_banner_file_is_reported(self):
+        """The static copy loop validates nothing, and the onerror placeholder
+        is styled for a work card, not a banner."""
+        site, _ = self.render([self.collection()])
+        self.assertTrue(any("banner missing" in w for w in site.warnings))
+
+    def test_malformed_slug_and_banner_are_refused_not_escaped(self):
+        """These land in filesystem paths, where escaping is the wrong tool."""
+        for bad in ({"slug": "Winter Series"}, {"slug": "../../tools"}, {"slug": ""}):
+            with self.assertRaises(ValueError):
+                self.build.collections(self.cfg([self.collection(**bad)]))
+        with self.assertRaises(ValueError):
+            self.build.collections(self.cfg([self.collection(banner="/img/w.jpg")]))
+        with self.assertRaises(ValueError):
+            self.build.collections(self.cfg([self.collection(), self.collection()]))
+
+    def test_site_without_collections_is_unchanged(self):
+        """An older site.json with no `collections` key must still build."""
+        cfg = self.cfg([])
+        del cfg["collections"]
+        self.assertEqual(self.build.collections(cfg), [])
+        self.assertEqual([e["path"] for e in self.build.nav_entries(cfg, [])],
+                         ["works/", "about/"])
 
 
 if __name__ == "__main__":

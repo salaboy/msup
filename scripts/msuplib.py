@@ -12,6 +12,7 @@ import re
 import socket
 import tempfile
 import time
+import unicodedata
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -37,6 +38,12 @@ KNOWN_LABELS = {
     "size": "size",
     "framed": "framed",
 }
+
+# The label that groups a listing into a collection. Deliberately NOT in
+# KNOWN_LABELS: promoting it would move the value from extra_fields to fields
+# in every affected record of a byte-stable works.json, churning the sync diff
+# and warranting a schema bump, to gain nothing the lookup below doesn't give.
+COLLECTION_LABEL = "collection"
 
 # Widths offered in srcset. il_fullxfull is deliberately excluded: its intrinsic
 # width is unknown so it cannot carry an honest `w` descriptor, and 400KB has no
@@ -142,6 +149,7 @@ _LABEL_RE = re.compile(r"^([A-Za-z][A-Za-z0-9 _/&-]{0,40}):\s*(.*)$")
 _SIZE_TOKEN_RE = re.compile(r"il_(?:\d+x\d+|\d+xN|fullxfull)")
 _PRICE_RE = re.compile(r"^([\d.,]+)\s*([A-Z]{3})$")
 _PRICE_RE_ALT = re.compile(r"^([A-Z]{3})\s*([\d.,]+)$")
+_NON_SLUG_RE = re.compile(r"[^a-z0-9]+")
 
 
 def _block(desc, cls):
@@ -212,6 +220,38 @@ def parse_price(raw):
     if m:
         price["currency"], price["amount"] = m.group(1), m.group(2)
     return price
+
+
+def slugify(text):
+    """'Sabiduría Universal' -> 'sabiduria-universal'. None if nothing survives.
+
+    Accents, case and punctuation are all flattened, so a label typed on a
+    phone keyboard ("sabiduria universal", "Sabiduría  Universal") resolves to
+    one key instead of silently dropping the piece out of its collection.
+
+    Returns None rather than "" for an empty result: a wholly non-Latin label
+    reduces to nothing here, and an empty slug would make a `collections//`
+    path constructible.
+    """
+    if not text:
+        return None
+    decomposed = unicodedata.normalize("NFKD", str(text))
+    folded = "".join(c for c in decomposed if not unicodedata.combining(c))
+    return _NON_SLUG_RE.sub("-", folded.lower()).strip("-") or None
+
+
+def collection_label(extra_fields):
+    """The raw `Collection:` value of a listing, or None.
+
+    The key lookup is case-insensitive because parse_description preserves the
+    artist's own capitalisation — `collection:` and `COLLECTION:` are both
+    reachable. Internal whitespace is collapsed because a continuation line
+    appends "\\n" + line, so a label can arrive split across two lines.
+    """
+    for key, value in (extra_fields or {}).items():
+        if key.strip().lower() == COLLECTION_LABEL:
+            return " ".join((value or "").split()) or None
+    return None
 
 
 def image_base(src):
@@ -604,6 +644,12 @@ def view(work):
     details = [(k.capitalize(), fields[k]) for k in ("type", "size", "framed") if fields.get(k)]
     details += list((etsy.get("extra_fields") or {}).items())
 
+    # The Collection row is left in `details` on purpose. Only build.py knows
+    # which collections are configured, so only build.py can tell a grouped
+    # piece from a typo — and it drops the row when, and only when, the slug
+    # resolves. Keeping it here makes the status quo the fail-safe default.
+    label = collection_label(etsy.get("extra_fields"))
+
     alt_hint = cur.get("alt")
     if not alt_hint:
         bits = [title] + [fields[k] for k in ("type", "size") if fields.get(k)]
@@ -639,6 +685,8 @@ def view(work):
         "year": cur.get("year"),
         "description": description,
         "details": details,
+        "collection": slugify(label),
+        "collection_label": label,
         "price": etsy.get("price") or {},
         "etsy_url": etsy.get("url"),
         "images": images,

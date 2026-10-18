@@ -36,6 +36,58 @@ You can invent new labels — `Edition:`, `Paper:`, `Year:` — and they show up
 automatically. A description with no labels at all still works; it's used as
 plain text.
 
+## Collections
+
+A collection is a named set of pieces with its own page, its own banner and its
+own link in the menu — a book, a series, anything that belongs together.
+
+**To put a piece in one**, add a line to the Etsy listing:
+
+```
+Collection: Sabiduría Universal
+```
+
+That's the whole job from your side. Accents, capitals and extra spaces don't
+matter: `collection: sabiduria universal` finds the same set.
+
+**To create the collection itself**, add an entry to `data/site.json`:
+
+```json
+"collections": [
+  {
+    "slug": "sabiduria-universal",
+    "title": "Sabiduría Universal",
+    "nav_label": "Sabiduría",
+    "in_nav": true,
+    "on_home": true,
+    "intro": "A 2024 book of drawings.",
+    "banner": "img/collections/sabiduria-universal.jpg",
+    "banner_alt": "",
+    "banner_width": 1600,
+    "banner_height": 1067
+  }
+]
+```
+
+| Field | Effect |
+|---|---|
+| `slug` | The URL: `/collections/<slug>/`. Lowercase words joined by `-`. |
+| `title` | The heading. **Also matched against the Etsy label**, so typing either the title or the slug on a listing works. |
+| `nav_label` | Shorter label for the menu. Defaults to the title. |
+| `in_nav` / `on_home` | Show in the menu / show the banner on the home page. |
+| `intro` | One or two sentences beside the banner. |
+| `banner` | The image, relative to `static/` — **no leading slash**. |
+| `banner_alt` | Alt text. Leave empty if the banner is decorative. |
+
+The banner is the one image that doesn't come from Etsy: put the file in
+`static/img/collections/` and commit it. Everything in the grid below it is the
+usual Etsy photo. Members keep appearing in **Work** as well — a collection is a
+second way in, not a separate shop.
+
+A listing whose `Collection:` doesn't match anything in `site.json` is left
+exactly as it is, with `Collection` shown as an ordinary row in its spec table,
+and the build prints a warning naming the piece. Nothing is lost to a typo.
+
 ## Photos: the gallery
 
 Etsy's RSS feed carries **only the first photo** of each listing. The other
@@ -151,7 +203,7 @@ data/images/*.json┘      (upsert)     (source of truth)   (templates/)
 | `scripts/build.py` | `works.json` + `templates/` → `_site/`. |
 | `tools/grab-photos.js` | The bookmarklet source, compiled into `/tools/` at build time. |
 | `data/images/` | Captured galleries, one file per listing. Yours to edit. Applied by both the sync and the build, so committing one is enough. |
-| `data/site.json` | Titles, URLs, nav, analytics ID. |
+| `data/site.json` | Titles, URLs, nav, collections, analytics ID. |
 | `content/*.txt` | Bio and page intro, as plain text. |
 
 ### Why the site is built this way
@@ -179,6 +231,12 @@ A few decisions that look odd until you know the reason:
   would silently never publish.
 - **The gallery is never ordered by Etsy's `pubDate`**, which is the *renewal*
   date. Sorting by it would reshuffle the grid every time a listing renews.
+- **A collection is declared on Etsy, designed in the repo.** Which pieces
+  belong changes often and must be doable from a phone, so it lives in the
+  listing; the banner, blurb and URL are design decisions, so they live in
+  `site.json`. The slug derived from the Etsy label is only ever a lookup key —
+  every path and link is built from the configured slug, so no text typed into
+  a listing can reach the filesystem.
 
 ### Known limitations
 
