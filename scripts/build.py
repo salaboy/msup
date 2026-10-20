@@ -446,6 +446,31 @@ class Site:
             cta_html=cta_html,
         )
 
+    def collection_foreword(self, coll):
+        """The curator's foreword for a collection, or '' if it has none.
+
+        The text lives in `content/collections/<slug>.txt` rather than in
+        site.json: it runs to several paragraphs, and site.json's other
+        collection fields are one-liners. A collection with no such file
+        renders nothing, so this is opt-in per collection.
+
+        The slug is safe to join onto a path — collections() has already
+        refused anything that is not lowercase words joined by '-'.
+        """
+        path = os.path.join(CONTENT, "collections", "%s.txt" % coll["slug"])
+        if not os.path.exists(path):
+            return ""
+        body = paragraphs(read(path))
+        if not body:
+            return ""
+        role = coll.get("foreword_role")
+        return template("partials/collection_foreword.html").safe_substitute(
+            foreword_body_html=body,
+            foreword_by=esc(coll.get("foreword_by") or self.cfg["title"]),
+            foreword_role_html=
+            '<span class="foreword-date">%s</span>' % esc(" · %s" % role) if role else "",
+        )
+
     def build_collection_page(self, coll, works):
         out_path = "collections/%s/index.html" % coll["slug"]
         rel = rel_prefix(out_path)
@@ -453,6 +478,7 @@ class Site:
         main_html = template("collection.html").safe_substitute(
             rel=rel,
             banner_html=self.collection_banner(coll, rel, "<h1>%s</h1>" % esc(coll["title"])),
+            foreword_html=self.collection_foreword(coll),
             works_html=self.grid(works, rel),
             empty_html="" if works else
             '<p class="empty-note">Nothing from this collection is listed right now.</p>',

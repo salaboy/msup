@@ -190,6 +190,84 @@ h2 { font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem); font-weight: 600; letter
 .banner-text .lede { max-width: 38ch; }
 .banner-text p { margin: 0; }
 
+/* ---------- collection foreword ---------- */
+
+/* A curator's note between the banner and the grid, in a tinted panel that
+   matches .banner-frame and .frame so it reads as part of the same set.
+   <details> gives expand/collapse with no JavaScript — the same bargain the
+   gallery makes — including keyboard and screen-reader support for free. */
+.foreword-panel {
+  background: var(--well);
+  border-radius: var(--radius);
+  padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 3vw, 2.25rem);
+}
+
+.foreword-panel summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  flex-wrap: wrap;
+  cursor: pointer;
+  /* Both are needed: Safari uses the -webkit pseudo-element, everyone else
+     reads list-style. Left in place, the default triangle sits beside the
+     chevron. */
+  list-style: none;
+}
+.foreword-panel summary::-webkit-details-marker { display: none; }
+
+.foreword-label {
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+
+.foreword-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.foreword-date {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+/* Pushed to the far end of the summary row, and the first thing to wrap away
+   from the byline on a narrow screen. */
+.foreword-marker {
+  margin-left: auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  align-self: center;
+  border-right: 1.5px solid var(--ink-faint);
+  border-bottom: 1.5px solid var(--ink-faint);
+  transform: rotate(45deg);
+  transition: transform 160ms ease;
+}
+.foreword-panel[open] .foreword-marker { transform: rotate(-135deg); }
+
+/* No max-width: the text runs the full width of the panel, which main's
+   --measure already caps. Set smaller than body copy and given a little
+   extra leading, so a long line still tracks back to the right place. */
+.foreword-body {
+  margin: 1.25rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+}
+
+.foreword-body p {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  margin: 0;
+  text-wrap: pretty;
+}
+.foreword-body p + p { margin-top: 0.9em; }
+
 /* ---------- work grid ---------- */
 
 .work-grid {

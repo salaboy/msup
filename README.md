@@ -76,8 +76,15 @@ matter: `collection: sabiduria universal` finds the same set.
 | `nav_label` | Shorter label for the menu. Defaults to the title. |
 | `in_nav` / `on_home` | Show in the menu / show the banner on the home page. |
 | `intro` | One or two sentences beside the banner. |
+| `foreword_by` / `foreword_role` | Who the foreword is by, and the line after their name. Only used if the collection has a foreword file — see below. |
 | `banner` | The image, relative to `static/` — **no leading slash**. |
 | `banner_alt` | Alt text. Leave empty if the banner is decorative. |
+
+**To add a foreword**, put the text in `content/collections/<slug>.txt`, one
+blank line between paragraphs, same as `content/about.txt`. It appears between
+the banner and the grid as a collapsible panel, open by default. A collection
+with no such file shows nothing, so this is opt-in — and `foreword_by` /
+`foreword_role` in `site.json` set the byline.
 
 The banner is the one image that doesn't come from Etsy: put the file in
 `static/img/collections/` and commit it. Everything in the grid below it is the
