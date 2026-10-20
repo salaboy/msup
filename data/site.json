@@ -24,6 +24,24 @@
       "banner_height": 800
     }
   ],
+  "exhibitions": [
+    {
+      "slug": "sabiduria-universal-2026",
+      "title": "Sabiduría Universal",
+      "date": "2026-11-10",
+      "time": "5:30 to 9:00pm",
+      "place": "Argentinian Residency",
+      "address": "49 Belgrave Square, London SW1X 8QZ",
+      "in_nav": true,
+      "on_home": true,
+      "intro": "An evening of drawings by Maryland Supreme & Sebastián Andía, exploring the universe, our surroundings and the expansion of life.",
+      "collection": "sabiduria-universal",
+      "poster": "img/exhibitions/sabiduria-universal-2026.jpg",
+      "poster_alt": "Poster for Sabiduría Universal: white hand-lettered type over a close-up of a painting in olive and ochre, with a band of blue, magenta and black strokes across the lower half.",
+      "poster_width": 1280,
+      "poster_height": 1600
+    }
+  ],
   "nav": [
     {
       "label": "Work",

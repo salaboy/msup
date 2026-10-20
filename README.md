@@ -95,6 +95,77 @@ A listing whose `Collection:` doesn't match anything in `site.json` is left
 exactly as it is, with `Collection` shown as an ordinary row in its spec table,
 and the build prints a warning naming the piece. Nothing is lost to a typo.
 
+## Exhibitions and events
+
+A show has a date, a place and a poster — and, once it has happened, photos.
+Each one gets a page at `/exhibitions/<slug>/`, a card on `/exhibitions/`, and
+moves itself from **Upcoming** to **Past** on its own as the date passes.
+
+**To announce a show**, add an entry to `data/site.json`:
+
+```json
+"exhibitions": [
+  {
+    "slug": "sabiduria-universal-2026",
+    "title": "Sabiduría Universal",
+    "date": "2026-11-10",
+    "time": "5:30 to 9:00pm",
+    "place": "Argentinian Residency",
+    "address": "49 Belgrave Square, London SW1X 8QZ",
+    "in_nav": true,
+    "on_home": true,
+    "intro": "An evening of drawings by Maryland Supreme & Sebastián Andía.",
+    "collection": "sabiduria-universal",
+    "poster": "img/exhibitions/sabiduria-universal-2026.jpg",
+    "poster_alt": "",
+    "poster_width": 1280,
+    "poster_height": 1600
+  }
+]
+```
+
+| Field | Effect |
+|---|---|
+| `slug` | The URL: `/exhibitions/<slug>/`, and the name of the photo folder. Lowercase words joined by `-`. |
+| `date` | **Always `YYYY-MM-DD`.** Anything else stops the build rather than guessing: `10/11` is read two different ways either side of the Atlantic. |
+| `end_date` | Optional, for a run rather than one evening. Renders as `10–14 November 2026`, and the show stays upcoming until the last day is over. |
+| `time` / `place` / `address` | The three lines under the date. All optional. |
+| `in_nav` | Adds **Exhibitions** to the menu. One entry however many shows there are — they share the index. |
+| `on_home` | Puts the poster on the home page, **only while the show is still ahead**. It takes itself down the day after. |
+| `collection` | Slug of a collection → a "See the collection" link. A show is often a collection hung on a wall. |
+| `poster` | The image, relative to `static/` — no leading slash, same rule as a collection banner. Portrait works best; it is never cropped. |
+| `poster_alt` | Alt text. Leave empty if the poster is decorative. |
+| `date_label` | Overrides the written-out date, for something the fields can't say ("Every Thursday in June"). |
+
+The date is the only field that can stop a build, and deliberately so — a show
+is a thing people travel to.
+
+**To add the photos afterwards**, put them in a folder named after the slug and
+commit:
+
+```
+static/img/exhibitions/sabiduria-universal-2026/01-opening.jpg
+static/img/exhibitions/sabiduria-universal-2026/02-wall.jpg
+```
+
+That's the whole job — no JSON to edit, so it works from a phone the same way
+artwork photos do. Filename order is the running order, so number them.
+Anything that isn't an image is ignored. Until the folder exists the page says
+photos will follow, so there is nothing to set up in advance.
+
+Alt text for them is optional, under `photo_alt` on the show:
+
+```json
+"photo_alt": { "01-opening.jpg": "The room filling up before the talk." }
+```
+
+A photo not listed there is treated as decorative — a made-up description is
+worse than none.
+
+**To add a note about the show**, put the text in
+`content/exhibitions/<slug>.txt`, exactly like a collection foreword. It
+appears between the poster and the photos in the same collapsible panel.
+
 ## Photos: the gallery
 
 Etsy's RSS feed carries **only the first photo** of each listing. The other
@@ -186,7 +257,7 @@ Edit it directly on GitHub and the site rebuilds on save.
 python3 scripts/serve.py                 # build + preview at localhost:8000/msup/
 python3 scripts/sync_etsy.py --dry-run   # show what a sync would change
 python3 scripts/build.py                 # build into _site/
-python3 -m unittest discover -s tests    # 50 tests, no network needed
+python3 -m unittest discover -s tests    # 97 tests, no network needed
 ```
 
 `_site/` is generated and gitignored — never edit it. The only file the sync
@@ -210,8 +281,9 @@ data/images/*.json┘      (upsert)     (source of truth)   (templates/)
 | `scripts/build.py` | `works.json` + `templates/` → `_site/`. |
 | `tools/grab-photos.js` | The bookmarklet source, compiled into `/tools/` at build time. |
 | `data/images/` | Captured galleries, one file per listing. Yours to edit. Applied by both the sync and the build, so committing one is enough. |
-| `data/site.json` | Titles, URLs, nav, collections, analytics ID. |
+| `data/site.json` | Titles, URLs, nav, collections, exhibitions, analytics ID. |
 | `content/*.txt` | Bio and page intro, as plain text. |
+| `static/img/exhibitions/` | A poster per show, plus a folder of photos per show. Yours to edit; see the note in that folder. |
 
 ### Why the site is built this way
 
@@ -244,6 +316,15 @@ A few decisions that look odd until you know the reason:
   `site.json`. The slug derived from the Etsy label is only ever a lookup key —
   every path and link is built from the configured slug, so no text typed into
   a listing can reach the filesystem.
+- **A show's photos are a folder, not a list.** Photos arrive in a batch the
+  week after a show, usually off a phone, and "Add file → Upload files" on
+  GitHub is then the whole job. Filename order is the running order, which is
+  all the control a dozen photos need.
+- **"Today" is passed into the build, not read inside it.** Whether a show is
+  upcoming or past is the one thing on this site that changes with nobody
+  editing a file. Making it an argument keeps the rendered site a pure function
+  of its inputs, so the rollover is covered by a test instead of by waiting for
+  November. The daily Etsy sync is what rebuilds and publishes it.
 
 ### Known limitations
 

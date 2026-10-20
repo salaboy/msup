@@ -3,8 +3,10 @@
 The FIX fixture is the real feed as returned by Etsy on 2026-08-31.
 """
 
+import datetime
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -777,8 +779,307 @@ class TestBuildCollections(unittest.TestCase):
         cfg = self.cfg([])
         del cfg["collections"]
         self.assertEqual(self.build.collections(cfg), [])
-        self.assertEqual([e["path"] for e in self.build.nav_entries(cfg, [])],
+        self.assertEqual([e["path"] for e in self.build.nav_entries(cfg, [], [])],
                          ["works/", "about/"])
+
+
+class TestBuildExhibitions(unittest.TestCase):
+    """Exhibitions: validation, the upcoming/past split, and photo discovery.
+
+    `today` is injected rather than read off the clock, so an assertion about
+    what is upcoming is still true in 2030. STATIC is redirected to a throwaway
+    tree, so a test can put show photos on disk without leaving them in the
+    repo.
+    """
+
+    SLUG = "winter-show-2026"
+    POSTER = "img/exhibitions/winter-show-2026.jpg"
+
+    def setUp(self):
+        import build
+        self.build = build
+
+    def cfg(self, exhibs, collections=None):
+        return {
+            "title": "Maryland Supreme", "tagline": "Hand drawn originals",
+            "description": "Test site.", "author": "Mauricio Salatino",
+            "base_url": "https://example.com/", "base_path": "/",
+            "etsy_shop_url": "https://www.etsy.com/shop/MSupShop",
+            "instagram_url": "https://instagram.com/marylandsupreme",
+            "google_analytics": "",
+            "nav": [{"label": "Work", "path": "works/"},
+                    {"label": "About", "path": "about/"}],
+            "collections": collections or [],
+            "exhibitions": exhibs,
+        }
+
+    def exhibition(self, **over):
+        entry = {
+            "slug": self.SLUG, "title": "Winter Show",
+            "date": "2026-11-10", "time": "5:30 to 9:00pm",
+            "place": "The Residency", "address": "49 Belgrave Square, London",
+            "in_nav": True, "on_home": True,
+            "intro": "One evening of drawings.",
+            "poster": self.POSTER, "poster_alt": "A poster.",
+            "poster_width": 1280, "poster_height": 1600,
+        }
+        entry.update(over)
+        return entry
+
+    def static(self, photos=(), poster=True):
+        """Point build.STATIC at a temp tree holding the poster and, if asked,
+        a folder of show photos."""
+        root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, root, True)
+        os.makedirs(os.path.join(root, "img", "exhibitions"))
+        if poster:
+            open(os.path.join(root, self.POSTER), "wb").close()
+        if photos:
+            folder = os.path.join(root, "img", "exhibitions", self.SLUG)
+            os.makedirs(folder)
+            for name in photos:
+                open(os.path.join(folder, name), "wb").close()
+        real = self.build.STATIC
+        self.build.STATIC = root
+        self.addCleanup(setattr, self.build, "STATIC", real)
+        return root
+
+    def render(self, exhibs, today="2026-01-01", collections=None):
+        """Build a whole site into a temp dir and return {path: html}."""
+        out = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, out, True)
+        site = self.build.Site(
+            self.cfg(exhibs, collections), m.empty_db(), out,
+            today=datetime.date.fromisoformat(today),
+        )
+        site.build()
+        pages = {}
+        for root, _dirs, names in os.walk(out):
+            for name in names:
+                if name.endswith((".html", ".xml")):
+                    full = os.path.join(root, name)
+                    with open(full, encoding="utf-8") as fh:
+                        pages[os.path.relpath(full, out)] = fh.read()
+        return site, pages
+
+    # -- the page itself -------------------------------------------------
+
+    def test_detail_page_carries_the_title_date_time_and_place(self):
+        self.static()
+        _, pages = self.render([self.exhibition()])
+        page = pages["exhibitions/%s/index.html" % self.SLUG]
+        self.assertIn("Winter Show", page)
+        self.assertIn("10 November 2026", page)
+        self.assertIn("5:30 to 9:00pm", page)
+        self.assertIn("The Residency", page)
+        self.assertIn('datetime="2026-11-10"', page)
+
+    def test_date_is_written_out_not_numeric(self):
+        """'10/11' is read two different ways either side of the Atlantic, so
+        the one line a visitor acts on is never rendered that way."""
+        self.static()
+        _, pages = self.render([self.exhibition()])
+        page = pages["exhibitions/%s/index.html" % self.SLUG]
+        self.assertIn("10 November 2026", page)
+        self.assertNotIn("10/11", page)
+
+    def test_date_ranges_read_naturally(self):
+        d = datetime.date
+        fmt = self.build.format_date_range
+        self.assertEqual(fmt(d(2026, 11, 10)), "10 November 2026")
+        self.assertEqual(fmt(d(2026, 11, 10), d(2026, 11, 10)), "10 November 2026")
+        self.assertEqual(fmt(d(2026, 11, 10), d(2026, 11, 14)), "10–14 November 2026")
+        self.assertEqual(fmt(d(2026, 11, 28), d(2026, 12, 3)),
+                         "28 November – 3 December 2026")
+        self.assertEqual(fmt(d(2026, 12, 30), d(2027, 1, 2)),
+                         "30 December 2026 – 2 January 2027")
+
+    def test_no_template_placeholder_survives(self):
+        self.static(photos=["01.jpg"])
+        _, pages = self.render([self.exhibition()])
+        for path, html in pages.items():
+            self.assertNotRegex(html, r"\$[a-z_]+", "placeholder left in %s" % path)
+
+    def test_no_internal_link_is_host_absolute(self):
+        """Every internal href is depth-relative so the site is correct at both
+        /msup/ and / — see the build.py module docstring."""
+        self.static()
+        _, pages = self.render([self.exhibition()])
+        for path in ("index.html", "exhibitions/index.html",
+                     "exhibitions/%s/index.html" % self.SLUG):
+            for href in re.findall(r'(?:href|src)="(/[^/][^"]*)"', pages[path]):
+                self.fail("host-absolute link %r in %s" % (href, path))
+
+    # -- upcoming vs past ------------------------------------------------
+
+    def test_a_show_stays_upcoming_throughout_the_day_it_happens(self):
+        self.static()
+        _, pages = self.render([self.exhibition()], today="2026-11-10")
+        self.assertIn("Upcoming", pages["exhibitions/index.html"])
+        self.assertNotIn(">Past<", pages["exhibitions/index.html"])
+
+    def test_a_show_becomes_past_the_day_after(self):
+        self.static()
+        _, pages = self.render([self.exhibition()], today="2026-11-11")
+        index = pages["exhibitions/index.html"]
+        self.assertIn("Past", index)
+        self.assertNotIn("Upcoming", index)
+
+    def test_an_end_date_keeps_a_run_upcoming_until_it_closes(self):
+        self.static()
+        ex = self.exhibition(end_date="2026-11-20")
+        _, pages = self.render([ex], today="2026-11-15")
+        self.assertIn("Upcoming", pages["exhibitions/index.html"])
+        _, pages = self.render([ex], today="2026-11-21")
+        self.assertIn("Past", pages["exhibitions/index.html"])
+
+    def test_an_empty_half_renders_no_heading(self):
+        """A site with no past shows should not advertise the fact."""
+        self.static()
+        _, pages = self.render([self.exhibition()], today="2026-01-01")
+        self.assertNotIn("past-heading", pages["exhibitions/index.html"])
+
+    def test_home_banner_appears_only_for_an_upcoming_show_that_asked(self):
+        self.static()
+        _, pages = self.render([self.exhibition()], today="2026-01-01")
+        self.assertIn("exhibition-banner", pages["index.html"])
+
+        _, pages = self.render([self.exhibition()], today="2026-11-11")
+        self.assertNotIn("exhibition-banner", pages["index.html"])
+
+        _, pages = self.render([self.exhibition(on_home=False)], today="2026-01-01")
+        self.assertNotIn("exhibition-banner", pages["index.html"])
+
+    # -- photos ----------------------------------------------------------
+
+    def test_photos_are_discovered_from_the_folder_in_filename_order(self):
+        self.static(photos=["02-wall.jpg", "01-opening.jpg", "03-crowd.JPG"])
+        _, pages = self.render([self.exhibition()], today="2026-12-01")
+        page = pages["exhibitions/%s/index.html" % self.SLUG]
+        found = re.findall(r'src="\.\./\.\./img/exhibitions/%s/([\w.-]+)"' % self.SLUG, page)
+        self.assertEqual(found, ["01-opening.jpg", "02-wall.jpg", "03-crowd.JPG"])
+
+    def test_non_images_in_the_photo_folder_are_ignored(self):
+        self.static(photos=["01.jpg", ".DS_Store", "notes.txt"])
+        _, pages = self.render([self.exhibition()], today="2026-12-01")
+        page = pages["exhibitions/%s/index.html" % self.SLUG]
+        self.assertIn("01.jpg", page)
+        self.assertNotIn("DS_Store", page)
+        self.assertNotIn("notes.txt", page)
+
+    def test_each_photo_links_to_its_full_size_file(self):
+        self.static(photos=["01.jpg"])
+        _, pages = self.render([self.exhibition()], today="2026-12-01")
+        page = pages["exhibitions/%s/index.html" % self.SLUG]
+        self.assertIn('<a href="../../img/exhibitions/%s/01.jpg">' % self.SLUG, page)
+
+    def test_photo_alt_is_applied_and_an_unlisted_photo_is_decorative(self):
+        """An invented description is worse than none, so a photo with no alt
+        configured is marked decorative rather than guessed at."""
+        self.static(photos=["01.jpg", "02.jpg"])
+        ex = self.exhibition(photo_alt={"01.jpg": "The room at opening night."})
+        _, pages = self.render([ex], today="2026-12-01")
+        page = pages["exhibitions/%s/index.html" % self.SLUG]
+        self.assertIn('alt="The room at opening night."', page)
+        self.assertIn('/02.jpg" alt=""', page)
+
+    def test_no_photos_yet_renders_a_note_and_no_empty_list(self):
+        self.static()
+        _, pages = self.render([self.exhibition()], today="2026-01-01")
+        page = pages["exhibitions/%s/index.html" % self.SLUG]
+        self.assertIn("Photos will appear here after the show.", page)
+        self.assertNotIn("photo-grid", page)
+
+    def test_a_past_show_with_no_photos_says_they_are_still_coming(self):
+        self.static()
+        _, pages = self.render([self.exhibition()], today="2026-12-01")
+        page = pages["exhibitions/%s/index.html" % self.SLUG]
+        self.assertIn("still being added", page)
+
+    # -- wiring ----------------------------------------------------------
+
+    def test_nav_entry_sits_before_about_and_marks_the_current_page(self):
+        self.static()
+        site, pages = self.render([self.exhibition()])
+        self.assertEqual([e["path"] for e in site.nav_items],
+                         ["works/", "exhibitions/", "about/"])
+        self.assertIn('href="../exhibitions/" aria-current="page"',
+                      pages["exhibitions/index.html"])
+        self.assertIn('href="../../exhibitions/" aria-current="page"',
+                      pages["exhibitions/%s/index.html" % self.SLUG])
+
+    def test_many_shows_still_contribute_one_nav_entry(self):
+        """Shows accumulate over the years; a nav that grew with them would be
+        unusable, so they share the index."""
+        self.static()
+        site, _ = self.render([self.exhibition(),
+                               self.exhibition(slug="spring-2027", date="2027-04-01")])
+        self.assertEqual([e["path"] for e in site.nav_items],
+                         ["works/", "exhibitions/", "about/"])
+
+    def test_poster_src_is_depth_relative_on_every_page(self):
+        self.static()
+        _, pages = self.render([self.exhibition()])
+        self.assertIn('src="%s"' % self.POSTER, pages["index.html"])
+        self.assertIn('src="../%s"' % self.POSTER, pages["exhibitions/index.html"])
+        self.assertIn('src="../../%s"' % self.POSTER,
+                      pages["exhibitions/%s/index.html" % self.SLUG])
+
+    def test_pages_are_in_the_sitemap_once(self):
+        self.static()
+        _, pages = self.render([self.exhibition()])
+        sitemap = pages["sitemap.xml"]
+        self.assertEqual(sitemap.count("<loc>https://example.com/exhibitions/</loc>"), 1)
+        self.assertEqual(
+            sitemap.count("<loc>https://example.com/exhibitions/%s/</loc>" % self.SLUG), 1)
+
+    def test_a_resolved_collection_is_linked_and_an_unknown_one_warns(self):
+        self.static()
+        coll = {"slug": "winter", "title": "Winter Series", "banner": "img/w.jpg"}
+        site, pages = self.render([self.exhibition(collection="winter")], collections=[coll])
+        self.assertIn('href="../../collections/winter/"',
+                      pages["exhibitions/%s/index.html" % self.SLUG])
+
+        site, _ = self.render([self.exhibition(collection="nope")], collections=[coll])
+        self.assertTrue(any("matches no entry" in w for w in site.warnings))
+
+    def test_missing_poster_file_is_reported(self):
+        self.static(poster=False)
+        site, _ = self.render([self.exhibition()])
+        self.assertTrue(any("poster missing" in w for w in site.warnings))
+
+    def test_malformed_slug_poster_and_date_are_refused_not_escaped(self):
+        """Slug and poster land in filesystem paths, and the date is compared
+        rather than printed — escaping is the wrong tool for all three."""
+        for bad in ({"slug": "Winter Show"}, {"slug": "../../tools"}, {"slug": ""}):
+            with self.assertRaises(ValueError):
+                self.build.exhibitions(self.cfg([self.exhibition(**bad)]))
+        with self.assertRaises(ValueError):
+            self.build.exhibitions(self.cfg([self.exhibition(poster="/img/p.jpg")]))
+        for bad in ("10/11/2026", "not a date", "", None):
+            with self.assertRaises(ValueError):
+                self.build.exhibitions(self.cfg([self.exhibition(date=bad)]))
+        with self.assertRaises(ValueError):
+            self.build.exhibitions(self.cfg([self.exhibition(), self.exhibition()]))
+
+    def test_an_end_date_before_the_start_is_refused(self):
+        with self.assertRaises(ValueError):
+            self.build.exhibitions(self.cfg([self.exhibition(end_date="2026-11-01")]))
+
+    def test_site_without_exhibitions_is_unchanged(self):
+        """An older site.json with no `exhibitions` key must still build, and
+        must not grow an empty section or a dead nav link."""
+        cfg = self.cfg([])
+        del cfg["exhibitions"]
+        self.assertEqual(self.build.exhibitions(cfg), [])
+        self.assertEqual([e["path"] for e in self.build.nav_entries(cfg, [], [])],
+                         ["works/", "about/"])
+
+        out = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, out, True)
+        site = self.build.Site(cfg, m.empty_db(), out)
+        site.build()
+        self.assertFalse(os.path.exists(os.path.join(out, "exhibitions")))
 
 
 if __name__ == "__main__":

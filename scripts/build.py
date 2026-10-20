@@ -15,6 +15,7 @@ Two rules shape most of the code here:
 """
 
 import argparse
+import datetime
 import html
 import json
 import os
@@ -39,6 +40,11 @@ IMAGES_DIR = os.path.join(ROOT, "data", "images")
 # Gallery selection is CSS-only (radio + :has()), and style.css carries one
 # rule per index. Keep these in step.
 MAX_GALLERY = 12
+
+# Notes left in static/ for whoever is adding files — instructions to a human,
+# not site content, so they are not copied into the build and never get a URL.
+# .DS_Store is here for the same reason it is in .gitignore.
+STATIC_SKIP = ("README.txt", ".DS_Store")
 
 
 def esc(value):
@@ -188,14 +194,121 @@ def collection_members(views, keys):
     return members
 
 
-def nav_entries(cfg, colls):
-    """Primary nav: site.json's own entries with in_nav collections spliced in
-    just before About, which reads better last."""
+EXHIBITIONS_PATH = "exhibitions/"
+
+# Spelled out rather than taken from strftime("%B"), which is locale-dependent:
+# the same build must read "10 November 2026" on a laptop and on CI.
+MONTHS = ("January", "February", "March", "April", "May", "June", "July",
+          "August", "September", "October", "November", "December")
+
+# What counts as a show photo when the folder is listed. Anything else sitting
+# in there — a stray .DS_Store, a notes file — is ignored rather than rendered
+# as a broken image.
+PHOTO_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif")
+
+
+def one_date(value, field, slug):
+    """Parse an ISO date, or refuse it by name.
+
+    Dates are compared (upcoming vs past) and formatted, not just printed, so a
+    typo must stop the build rather than silently sort a show into the wrong
+    half of the page.
+    """
+    try:
+        return datetime.date.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        raise ValueError(
+            "exhibition %r: %s must be an ISO date like '2026-11-10', got %r"
+            % (slug, field, value)
+        )
+
+
+def format_date_range(start, end=None):
+    """A human date line: '10 November 2026', '10–14 November 2026',
+    '28 November – 3 December 2026', '30 December 2026 – 2 January 2027'.
+
+    Written out in full because this is the one line a visitor acts on, and
+    '10/11' is read two different ways either side of the Atlantic.
+    """
+    if end is None or end == start:
+        return "%d %s %d" % (start.day, MONTHS[start.month - 1], start.year)
+    if (start.year, start.month) == (end.year, end.month):
+        return "%d–%d %s %d" % (start.day, end.day, MONTHS[start.month - 1], start.year)
+    if start.year == end.year:
+        return "%d %s – %d %s %d" % (
+            start.day, MONTHS[start.month - 1], end.day, MONTHS[end.month - 1], end.year
+        )
+    return "%d %s %d – %d %s %d" % (
+        start.day, MONTHS[start.month - 1], start.year,
+        end.day, MONTHS[end.month - 1], end.year,
+    )
+
+
+def exhibitions(cfg):
+    """Validate and normalise cfg['exhibitions'].
+
+    The same bargain as collections(): the slug becomes a directory name, a URL
+    path and the name of the folder show photos are read from, so it is
+    validated rather than escaped. Dates are parsed here too, so that every
+    later consumer is handed a real date object and the Upcoming/Past split
+    cannot be fooled by a string comparison.
+    """
+    out, seen = [], set()
+    for entry in cfg.get("exhibitions") or []:
+        ex = dict(entry)
+        slug = (ex.get("slug") or "").strip()
+        if not COLLECTION_SLUG_RE.match(slug):
+            raise ValueError(
+                "exhibition slug must be lowercase words joined by '-', got %r" % slug
+            )
+        if slug in seen:
+            raise ValueError("duplicate exhibition slug %r — one would overwrite the other" % slug)
+        seen.add(slug)
+
+        poster = (ex.get("poster") or "").strip()
+        if poster.startswith("/"):
+            # Same reasoning as a collection banner: a leading slash both
+            # doubles the separator and escapes base_path under urljoin().
+            raise ValueError(
+                "exhibition poster must be site-root-relative with no leading '/', got %r" % poster
+            )
+
+        start = one_date(ex.get("date"), "date", slug)
+        end = one_date(ex["end_date"], "end_date", slug) if ex.get("end_date") else None
+        if end and end < start:
+            raise ValueError(
+                "exhibition %r: end_date %s falls before date %s" % (slug, end, start)
+            )
+
+        ex["slug"] = slug
+        ex["poster"] = poster
+        ex["title"] = ex.get("title") or slug
+        ex["path"] = "%s%s/" % (EXHIBITIONS_PATH, slug)
+        ex["start"] = start
+        ex["end"] = end
+        ex["date_label"] = ex.get("date_label") or format_date_range(start, end)
+        ex["photos_dir"] = "img/exhibitions/%s" % slug
+        out.append(ex)
+    return out
+
+
+def nav_entries(cfg, colls, exhibs):
+    """Primary nav: site.json's own entries with in_nav collections and, if any
+    exhibition asks for it, a single Exhibitions link spliced in just before
+    About, which reads better last.
+
+    Collections contribute one entry each — they are destinations in their own
+    right. Exhibitions contribute at most one, pointing at the index: shows
+    accumulate over the years and a nav that grew with them would be unusable.
+    """
     items = [dict(e) for e in cfg["nav"]]
     extra = [
         {"label": c.get("nav_label") or c["title"], "path": c["path"]}
         for c in colls if c.get("in_nav")
     ]
+    if any(e.get("in_nav") for e in exhibs):
+        extra.append({"label": cfg.get("exhibitions_nav_label") or "Exhibitions",
+                      "path": EXHIBITIONS_PATH})
     if not extra:
         return items
     cut = next((i for i, e in enumerate(items) if e["path"] == "about/"), len(items))
@@ -227,7 +340,7 @@ def analytics_snippet(measurement_id):
 
 
 class Site:
-    def __init__(self, cfg, db, out):
+    def __init__(self, cfg, db, out, today=None):
         self.cfg = cfg
         self.db = db
         self.out = out
@@ -241,8 +354,32 @@ class Site:
         # (serve.py imports and calls it).
         self.collections = collections(cfg)
         self.by_collection = collection_keys(self.collections)
-        self.nav_items = nav_entries(cfg, self.collections)
+        self.exhibitions = exhibitions(cfg)
+        # Injected for the same reason: whether a show is upcoming or past is
+        # the one thing on this site that changes without anyone editing a
+        # file, so "today" is an argument and not a call to the clock buried
+        # three frames down. main() leaves it unset; tests pin it.
+        self.today = today or datetime.date.today()
+        self.nav_items = nav_entries(cfg, self.collections, self.exhibitions)
         self.warnings = []
+
+    # -- exhibition dates ------------------------------------------------
+
+    def is_past(self, ex):
+        """A show is past once its last day is behind us — so it stays listed
+        as upcoming, and on the home page, throughout the day it happens."""
+        return (ex["end"] or ex["start"]) < self.today
+
+    def upcoming(self):
+        """Soonest first: the next thing to go to is the thing to lead with."""
+        return sorted((e for e in self.exhibitions if not self.is_past(e)),
+                      key=lambda e: e["start"])
+
+    def past(self):
+        """Most recent first, so the archive reads backwards from now."""
+        return sorted((e for e in self.exhibitions if self.is_past(e)),
+                      key=lambda e: e["start"], reverse=True)
+
 
     # -- shared chrome ---------------------------------------------------
 
@@ -530,6 +667,246 @@ class Site:
                 "collection %r: banner missing — expected static/%s" % (coll["slug"], coll["banner"])
             )
 
+    # -- exhibitions -----------------------------------------------------
+
+    def exhibition_photos(self, ex):
+        """Show photos, read from static/img/exhibitions/<slug>/.
+
+        A folder rather than a list in site.json: photos arrive in a batch the
+        week after a show, usually off a phone, and GitHub's "Add file →
+        Upload files" is then the whole job. Filename order is the running
+        order, so `01-`, `02-` prefixes are all the control needed.
+
+        The slug has already been validated by exhibitions(), so joining it
+        onto a path here is safe by construction rather than by sanitising.
+        """
+        folder = os.path.join(STATIC, "img", "exhibitions", ex["slug"])
+        if not os.path.isdir(folder):
+            return []
+        alts = ex.get("photo_alt") or {}
+        return [
+            {"src": "%s/%s" % (ex["photos_dir"], name), "alt": alts.get(name, "")}
+            for name in sorted(os.listdir(folder))
+            if not name.startswith(".") and name.lower().endswith(PHOTO_EXTS)
+        ]
+
+    def exhibition_meta(self, ex):
+        """Date, time and place. The written-out date carries a machine-readable
+        datetime beside it, which is what a calendar or a crawler reads."""
+        bits = ['<time class="exhibition-date" datetime="%s">%s</time>'
+                % (esc(ex["start"].isoformat()), esc(ex["date_label"]))]
+        for key, cls in (("time", "exhibition-time"),
+                         ("place", "exhibition-place"),
+                         ("address", "exhibition-address")):
+            if ex.get(key):
+                bits.append('<span class="%s">%s</span>' % (cls, esc(ex[key])))
+        return '<p class="exhibition-meta">%s</p>' % "".join(bits)
+
+    def exhibition_banner(self, ex, rel, heading_html, cta_html=""):
+        """One poster beside its details. `rel` is an argument for the same
+        reason as collection_banner()'s: the home teaser renders at '' and the
+        show's own page at '../../'."""
+        dims = ""
+        if ex.get("poster_width") and ex.get("poster_height"):
+            dims = ' width="%d" height="%d"' % (
+                int(ex["poster_width"]), int(ex["poster_height"])
+            )
+        return template("partials/exhibition_banner.html").safe_substitute(
+            poster_src=esc(rel + ex["poster"]),
+            # As with a collection banner, an unset alt means decorative —
+            # better than reading the heading out twice.
+            poster_alt=esc(ex.get("poster_alt") or ""),
+            dim_attrs=dims,
+            heading_html=heading_html,
+            meta_html=self.exhibition_meta(ex),
+            intro_html='<p class="lede">%s</p>' % esc(ex["intro"]) if ex.get("intro") else "",
+            cta_html=cta_html,
+        )
+
+    def exhibition_card(self, ex, rel):
+        meta = " · ".join(b for b in (ex["date_label"], ex.get("place")) if b)
+        return template("partials/exhibition_card.html").safe_substitute(
+            rel=rel,
+            path=esc(ex["path"]),
+            poster_src=esc(rel + ex["poster"]) if ex["poster"] else
+            esc(rel + "img/placeholder.svg"),
+            poster_alt=esc(ex.get("poster_alt") or ""),
+            title=esc(ex["title"]),
+            meta=esc(meta),
+        )
+
+    def exhibition_section(self, heading, slug, items, rel):
+        """One half of the index. An empty half renders nothing at all rather
+        than a heading over a void — a site with no past shows yet should not
+        advertise the fact."""
+        if not items:
+            return ""
+        return (
+            '<section class="works" aria-labelledby="%s-heading">\n'
+            '  <h2 id="%s-heading" class="section-heading">%s</h2>\n'
+            '  <ul class="exhibition-grid">\n%s\n  </ul>\n</section>'
+            % (slug, slug, esc(heading),
+               "\n".join(self.exhibition_card(e, rel) for e in items))
+        )
+
+    def check_poster(self, ex):
+        """Warn about a poster that will 404 — same reasoning as check_banner:
+        the static copy loop validates nothing, so a missing file should be
+        loud at build time rather than a placeholder on the live site."""
+        if not ex["poster"]:
+            self.warnings.append("exhibition %r has no poster image" % ex["slug"])
+        elif not os.path.exists(os.path.join(STATIC, ex["poster"])):
+            self.warnings.append(
+                "exhibition %r: poster missing — expected static/%s" % (ex["slug"], ex["poster"])
+            )
+
+    def build_exhibition_page(self, ex):
+        out_path = "%s%s/index.html" % (EXHIBITIONS_PATH, ex["slug"])
+        rel = rel_prefix(out_path)
+        photos = self.exhibition_photos(ex)
+
+        # A show often *is* a collection hung on a wall, so link the two when
+        # the slug resolves. An unmatched slug warns rather than failing: the
+        # show itself is still worth publishing.
+        coll = next((c for c in self.collections if c["slug"] == ex.get("collection")), None)
+        if ex.get("collection") and not coll:
+            self.warnings.append(
+                "exhibition %r: collection %r matches no entry in site.json — link omitted"
+                % (ex["slug"], ex["collection"])
+            )
+        cta_html = ""
+        if coll:
+            cta_html = '<p><a class="button button-quiet" href="%s%s">See the collection</a></p>' % (
+                rel, esc(coll["path"])
+            )
+
+        # The <ul> is built here rather than sitting in the template so that a
+        # show with no photos yet emits no empty list at all — an empty <ul>
+        # is a node in the accessibility tree announcing nothing.
+        photos_html, empty_html = "", ""
+        if photos:
+            photos_html = '  <ul class="photo-grid">\n%s\n  </ul>' % "\n".join(
+                '    <li class="photo-card">\n'
+                '      <a href="%s%s">\n'
+                '        <div class="frame">\n'
+                '          <img src="%s%s" alt="%s" loading="lazy" decoding="async">\n'
+                '        </div>\n'
+                '      </a>\n'
+                '    </li>' % (rel, esc(p["src"]), rel, esc(p["src"]), esc(p["alt"]))
+                for p in photos
+            )
+        elif self.is_past(ex):
+            empty_html = '<p class="empty-note">Photos from this show are still being added.</p>'
+        else:
+            empty_html = '<p class="empty-note">Photos will appear here after the show.</p>'
+
+        main_html = template("exhibition.html").safe_substitute(
+            rel=rel,
+            banner_html=self.exhibition_banner(
+                ex, rel, "<h1>%s</h1>" % esc(ex["title"]), cta_html
+            ),
+            statement_html=self.exhibition_statement(ex),
+            photos_html=photos_html,
+            empty_html=empty_html,
+            etsy_shop_url=esc(self.cfg["etsy_shop_url"]),
+        )
+
+        ld = {
+            "@context": "https://schema.org",
+            "@type": "ExhibitionEvent",
+            "name": ex["title"],
+            "startDate": ex["start"].isoformat(),
+            "endDate": (ex["end"] or ex["start"]).isoformat(),
+            "eventStatus": "https://schema.org/EventScheduled",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "url": urllib.parse.urljoin(self.base_url, ex["path"]),
+            "performer": {"@type": "Person", "name": self.cfg["author"],
+                          "alternateName": self.cfg["title"]},
+        }
+        if ex.get("place") or ex.get("address"):
+            place = {"@type": "Place", "name": ex.get("place") or ex.get("address")}
+            if ex.get("address"):
+                place["address"] = ex["address"]
+            ld["location"] = place
+        if ex.get("intro"):
+            ld["description"] = ex["intro"]
+        if ex["poster"]:
+            ld["image"] = urllib.parse.urljoin(self.base_url, ex["poster"])
+
+        summary = ex.get("intro") or "%s — %s%s." % (
+            ex["title"], ex["date_label"], ", %s" % ex["place"] if ex.get("place") else ""
+        )
+        self.render_page(
+            out_path, main_html,
+            title="%s — %s" % (ex["title"], self.cfg["title"]),
+            description=summary[:300],
+            og_type="article",
+            og_image=urllib.parse.urljoin(self.base_url, ex["poster"]) if ex["poster"] else None,
+            head_extra_html='<script type="application/ld+json">%s</script>' % json_ld(ld),
+            active=EXHIBITIONS_PATH, changefreq="monthly",
+        )
+
+    def exhibition_statement(self, ex):
+        """An optional note about the show, from content/exhibitions/<slug>.txt.
+
+        Same shape and same opt-in rule as a collection's foreword, and it
+        reuses that partial: two tinted panels that behaved differently would
+        be a worse site than one that behaves the same way twice.
+        """
+        path = os.path.join(CONTENT, "exhibitions", "%s.txt" % ex["slug"])
+        if not os.path.exists(path):
+            return ""
+        body = paragraphs(read(path))
+        if not body:
+            return ""
+        role = ex.get("statement_role") or ex["date_label"]
+        return template("partials/collection_foreword.html").safe_substitute(
+            foreword_body_html=body,
+            foreword_by=esc(ex.get("statement_by") or self.cfg["title"]),
+            foreword_role_html=
+            '<span class="foreword-date">%s</span>' % esc(" · %s" % role) if role else "",
+        )
+
+    def build_exhibitions_index(self):
+        out_path = "%sindex.html" % EXHIBITIONS_PATH
+        rel = rel_prefix(out_path)
+        upcoming, past = self.upcoming(), self.past()
+
+        main_html = template("exhibitions_index.html").safe_substitute(
+            rel=rel,
+            intro=esc("Shows, openings and events. Dates and places as they are confirmed."),
+            upcoming_html=self.exhibition_section("Upcoming", "upcoming", upcoming, rel),
+            past_html=self.exhibition_section("Past", "past", past, rel),
+            empty_html="" if self.exhibitions else
+            '<p class="empty-note">Nothing in the diary right now.</p>',
+        )
+
+        ld = {
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": "Exhibitions",
+            "url": urllib.parse.urljoin(self.base_url, EXHIBITIONS_PATH),
+            "mainEntity": {
+                "@type": "ItemList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": i + 1,
+                        "url": urllib.parse.urljoin(self.base_url, e["path"]),
+                        "name": e["title"],
+                    }
+                    for i, e in enumerate(upcoming + past)
+                ],
+            },
+        }
+        self.render_page(
+            out_path, main_html,
+            title="Exhibitions — %s" % self.cfg["title"],
+            description="Exhibitions and events featuring work by %s." % self.cfg["title"],
+            head_extra_html='<script type="application/ld+json">%s</script>' % json_ld(ld),
+            active=EXHIBITIONS_PATH, changefreq="weekly",
+        )
+
     def build_work_page(self, work):
         out_path = "works/%s/index.html" % work["slug"]
         rel = rel_prefix(out_path)
@@ -649,6 +1026,8 @@ class Site:
 
         for coll in self.collections:
             self.check_banner(coll)
+        for ex in self.exhibitions:
+            self.check_poster(ex)
 
         home_banners = "\n".join(
             self.collection_banner(
@@ -659,9 +1038,22 @@ class Site:
             for coll in self.collections if coll.get("on_home")
         )
 
+        # Only shows still ahead of us, and only those that asked. A past show
+        # taking up the top of the home page would be the site telling people
+        # to turn up to something that already happened.
+        home_exhibitions = "\n".join(
+            self.exhibition_banner(
+                ex, "",
+                "<h2>%s</h2>" % esc(ex["title"]),
+                '<p><a class="button" href="%s">Details</a></p>' % esc(ex["path"]),
+            )
+            for ex in self.upcoming() if ex.get("on_home")
+        )
+
         home = template("home.html").safe_substitute(
             rel="",
             home_intro=esc(read(os.path.join(CONTENT, "home_intro.txt")).strip()),
+            exhibition_banner_html=home_exhibitions,
             collection_banner_html=home_banners,
             works_html=self.grid(featured, ""),
             empty_html="" if featured else
@@ -703,6 +1095,13 @@ class Site:
 
         for coll in self.collections:
             self.build_collection_page(coll, members.get(coll["slug"], []))
+
+        # The index exists whenever any show is configured; a site with none
+        # keeps the section — and its nav entry — off entirely.
+        if self.exhibitions:
+            self.build_exhibitions_index()
+            for ex in self.exhibitions:
+                self.build_exhibition_page(ex)
 
         # Setup page for the photo bookmarklet. Not in the nav or the sitemap —
         # it exists so the artist can reach it from any device.
@@ -749,10 +1148,13 @@ class Site:
         self.write("robots.txt", template("robots.txt").safe_substitute(base_url=self.base_url))
 
         for entry in os.listdir(STATIC):
+            if entry in STATIC_SKIP:
+                continue
             src = os.path.join(STATIC, entry)
             dst = os.path.join(self.out, entry)
             if os.path.isdir(src):
-                shutil.copytree(src, dst, dirs_exist_ok=True)
+                shutil.copytree(src, dst, dirs_exist_ok=True,
+                                ignore=shutil.ignore_patterns(*STATIC_SKIP))
             else:
                 shutil.copy2(src, dst)
         self.write(".nojekyll", "")

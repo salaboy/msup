@@ -164,17 +164,25 @@ h2 { font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem); font-weight: 600; letter
 /* Image beside text, stacking on a phone — the same shape as .work-detail,
    including minmax(0, 1fr) rather than 1fr: a grid item defaults to
    min-width:auto, so the banner would refuse to shrink below its intrinsic
-   width and push the page wider than the screen. */
-.collection-banner {
+   width and push the page wider than the screen.
+
+   An exhibition banner is the same object with a portrait poster in it, so it
+   shares every rule here and differs only in .poster-frame below. */
+.collection-banner,
+.exhibition-banner {
   display: grid;
   gap: clamp(1.75rem, 4vw, 3.5rem);
   grid-template-columns: minmax(0, 1fr);
   align-items: center;
 }
-.collection-banner > * { min-width: 0; }
+.collection-banner > *,
+.exhibition-banner > * { min-width: 0; }
 
 @media (min-width: 900px) {
   .collection-banner { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+  /* The poster is portrait, so it gets the narrower half — the reverse of a
+     landscape banner, or it would tower over the text beside it. */
+  .exhibition-banner { grid-template-columns: minmax(0, 0.75fr) minmax(0, 1fr); }
 }
 
 .banner-frame {
@@ -317,6 +325,81 @@ figcaption { margin-top: 0.9rem; display: grid; gap: 0.15rem; }
 .work-card-sold .frame img { opacity: 0.78; }
 
 .empty-note { color: var(--ink-soft); font-style: italic; }
+
+/* ---------- exhibitions ---------- */
+
+/* Posters are portrait and carry their own typography, so they are never
+   cropped: contain inside a 4:5 frame, on the same tinted ground as every
+   other image well on the site.
+
+   .poster-frame is a modifier on .banner-frame and .frame, and it ties with
+   both on specificity — so this section MUST stay below them, or a poster
+   goes back to being cropped square by .frame. */
+.poster-frame {
+  aspect-ratio: 4 / 5;
+  background: var(--well);
+}
+.poster-frame img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Date, time and venue — one fact per line, the date leading. Stacked rather
+   than run together with separators, because this is the block a visitor
+   reads to decide whether they can turn up. */
+.exhibition-meta {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+}
+
+.exhibition-date {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.exhibition-time { font-size: 0.9375rem; color: var(--ink-soft); }
+
+.exhibition-place {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+
+.exhibition-address { font-size: 0.875rem; color: var(--ink-soft); }
+
+/* Wider tiles than the work grid: a poster at work-card width is unreadable,
+   and there are only ever a handful of shows. */
+.exhibition-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 340px));
+  gap: 2.5rem 2rem;
+}
+
+.exhibition-card a { text-decoration: none; display: block; }
+.exhibition-card figure { margin: 0; }
+.exhibition-card .frame img { transition: transform 200ms ease; }
+.exhibition-card a:hover .frame img { transform: scale(1.02); }
+
+/* Photos of the show. Square crops like the work grid, each one linking to
+   the full-size file — no JavaScript, so no lightbox and no cap on how many
+   a show can have. */
+.photo-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.photo-card a { display: block; }
+.photo-card .frame img { transition: transform 200ms ease; }
+.photo-card a:hover .frame img { transform: scale(1.02); }
 
 /* ---------- work detail ---------- */
 
