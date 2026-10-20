@@ -506,6 +506,61 @@
         "first_seen": "2026-09-01",
         "relisted_at": null
       }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“Living organisms always find a way. Complex structures enabled the creation of complex creatures who not only thrived but consumed chaos to bring control to their environments.” From the micro ring of Sabiduría Universal, the innermost of three rings looking at the creation of matter and how consciousness was born out of the emptiness of space. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "Recycled Frame",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "Encontrando criaturas, a veces desconocidas",
+          "type": "hand drawn original"
+        },
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/20e68d/8712857996/il_{size}.8712857996_il8r.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/20e68d/8712857996/il_570xN.8712857996_il8r.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4599651095",
+        "price": {
+          "amount": "350.00",
+          "currency": "GBP",
+          "raw": "350.00 GBP"
+        },
+        "pub_date": "2026-10-20",
+        "slug": "encontrando-criaturas-finding-creatures1792523880",
+        "title": "Encontrando Criaturas / Finding Creatures (framed, original, hand drawn, A3)",
+        "url": "https://www.etsy.com/listing/4599651095/encontrando-criaturas-finding-creatures1792523880"
+      },
+      "id": "4599651095",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-10-20",
+        "relisted_at": null
+      }
     }
   ]
 }
