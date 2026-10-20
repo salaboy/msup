@@ -950,6 +950,29 @@ class TestBuildExhibitions(unittest.TestCase):
         _, pages = self.render([self.exhibition(on_home=False)], today="2026-01-01")
         self.assertNotIn("exhibition-banner", pages["index.html"])
 
+    def test_home_row_holds_both_teasers_with_the_show_first(self):
+        """They sit side by side in one row, and the show leads — it is the one
+        with a date on it."""
+        self.static()
+        coll = {"slug": "winter", "title": "Winter Series", "on_home": True,
+                "banner": "img/w.jpg", "intro": "Drawings from one winter."}
+        _, pages = self.render([self.exhibition()], collections=[coll])
+        home = pages["index.html"]
+        self.assertIn('class="home-banners"', home)
+        self.assertLess(home.index("exhibition-banner"), home.index("collection-banner"))
+
+    def test_a_lone_teaser_still_gets_the_row_wrapper(self):
+        """The :only-child rule in style.css is what widens a single teaser
+        back out, so the wrapper has to be there even for one."""
+        self.static()
+        _, pages = self.render([self.exhibition()])
+        self.assertIn('class="home-banners"', pages["index.html"])
+
+    def test_no_teasers_emits_no_row_at_all(self):
+        self.static()
+        _, pages = self.render([self.exhibition(on_home=False)])
+        self.assertNotIn("home-banners", pages["index.html"])
+
     # -- photos ----------------------------------------------------------
 
     def test_photos_are_discovered_from_the_folder_in_filename_order(self):
@@ -982,6 +1005,23 @@ class TestBuildExhibitions(unittest.TestCase):
         page = pages["exhibitions/%s/index.html" % self.SLUG]
         self.assertIn('alt="The room at opening night."', page)
         self.assertIn('/02.jpg" alt=""', page)
+
+    def test_a_photo_alt_that_is_not_a_map_is_refused_at_construct_time(self):
+        """Read only once the photo folder exists, so a bad value would lie
+        dormant until the first upload and then take the previous build with
+        it. Refused up front instead."""
+        for bad in (["01.jpg"], "01.jpg", 7):
+            with self.assertRaises(ValueError):
+                self.build.exhibitions(self.cfg([self.exhibition(photo_alt=bad)]))
+
+    def test_photo_filenames_are_percent_encoded(self):
+        """esc() is the wrong layer for a URL: an unencoded '#' would be read
+        as a fragment and 404 the photo."""
+        self.static(photos=["01 shot #1.jpg"])
+        _, pages = self.render([self.exhibition()], today="2026-12-01")
+        page = pages["exhibitions/%s/index.html" % self.SLUG]
+        self.assertIn("01%20shot%20%231.jpg", page)
+        self.assertNotIn("01 shot #1.jpg", page)
 
     def test_no_photos_yet_renders_a_note_and_no_empty_list(self):
         self.static()

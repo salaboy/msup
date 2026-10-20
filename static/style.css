@@ -401,6 +401,55 @@ figcaption { margin-top: 0.9rem; display: grid; gap: 0.15rem; }
 .photo-card .frame img { transition: transform 200ms ease; }
 .photo-card a:hover .frame img { transform: scale(1.02); }
 
+/* ---------- home: the two teasers, side by side ---------- */
+
+/* The upcoming show and the collection share one row on the home page. Below
+   900px they stack, the show first — it is the one with a date on it. */
+.home-banners {
+  display: grid;
+  gap: clamp(2rem, 5vw, 3.5rem);
+  grid-template-columns: minmax(0, 1fr);
+  /* Tops aligned, not centres: a portrait poster and a landscape banner are
+     never the same height, and two captions starting on the same line reads
+     as a row rather than as two things that drifted apart. */
+  align-items: start;
+}
+.home-banners > * { min-width: 0; }
+
+@media (min-width: 900px) {
+  .home-banners { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* Each teaser now has half the page, so it stacks internally — image above
+     its words — instead of the side-by-side shape it uses on its own page. */
+  .home-banners .collection-banner,
+  .home-banners .exhibition-banner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  /* Side by side, a 4:5 poster stands about twice as tall as a 3:2 banner and
+     the shorter column is left orphaned. In the row only, both frames take one
+     shared ratio so the two headings land on the same line. The poster is
+     still contained, never cropped — it is mostly type — and sits matted on
+     the well; the banner still crops, as it does everywhere else. */
+  .home-banners .banner-frame { aspect-ratio: 4 / 3; }
+
+  /* With only one teaser there is no row to keep: it takes the full width and
+     its usual side-by-side shape back — and, with nothing to line up against,
+     its own proportions too. */
+  .home-banners > :only-child { grid-column: 1 / -1; }
+  .home-banners > :only-child .banner-frame { aspect-ratio: 3 / 2; }
+  .home-banners > .exhibition-banner:only-child .poster-frame { aspect-ratio: 4 / 5; }
+  .home-banners > .collection-banner:only-child {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: clamp(1.75rem, 4vw, 3.5rem);
+  }
+  .home-banners > .exhibition-banner:only-child {
+    grid-template-columns: minmax(0, 0.75fr) minmax(0, 1fr);
+    gap: clamp(1.75rem, 4vw, 3.5rem);
+  }
+}
+
 /* ---------- work detail ---------- */
 
 .work-detail {

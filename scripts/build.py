@@ -280,6 +280,17 @@ def exhibitions(cfg):
                 "exhibition %r: end_date %s falls before date %s" % (slug, end, start)
             )
 
+        # Checked here rather than where it is read, because that happens only
+        # once the photo folder exists — i.e. the first time the artist uploads
+        # photos, long after this file was edited. Refusing it at construct
+        # time also keeps the previous build intact (see main()).
+        alts = ex.get("photo_alt")
+        if alts is not None and not isinstance(alts, dict):
+            raise ValueError(
+                "exhibition %r: photo_alt must map filenames to alt text, "
+                'like {"01-opening.jpg": "..."}, got %r' % (slug, alts)
+            )
+
         ex["slug"] = slug
         ex["poster"] = poster
         ex["title"] = ex.get("title") or slug
@@ -685,7 +696,12 @@ class Site:
             return []
         alts = ex.get("photo_alt") or {}
         return [
-            {"src": "%s/%s" % (ex["photos_dir"], name), "alt": alts.get(name, "")}
+            # The filename is percent-encoded, not just HTML-escaped: these are
+            # named by hand, and a '#' or '?' in one would otherwise be read as
+            # a fragment or query and 404 the photo. esc() does not help here —
+            # it is the wrong layer.
+            {"src": "%s/%s" % (ex["photos_dir"], urllib.parse.quote(name, safe="")),
+             "alt": alts.get(name, "")}
             for name in sorted(os.listdir(folder))
             if not name.startswith(".") and name.lower().endswith(PHOTO_EXTS)
         ]
@@ -1050,11 +1066,21 @@ class Site:
             for ex in self.upcoming() if ex.get("on_home")
         )
 
+        # The row wraps both kinds of teaser so they sit side by side, the show
+        # first — it is the one with a date on it. Built here rather than in
+        # the template so that a home page with neither emits no empty row, and
+        # one with a single teaser still gets the wrapper, which is what the
+        # :only-child rule in style.css widens back out.
+        home_banners_html = ""
+        if home_exhibitions or home_banners:
+            home_banners_html = '<div class="home-banners">\n%s\n</div>' % "\n".join(
+                b for b in (home_exhibitions, home_banners) if b
+            )
+
         home = template("home.html").safe_substitute(
             rel="",
             home_intro=esc(read(os.path.join(CONTENT, "home_intro.txt")).strip()),
-            exhibition_banner_html=home_exhibitions,
-            collection_banner_html=home_banners,
+            home_banners_html=home_banners_html,
             works_html=self.grid(featured, ""),
             empty_html="" if featured else
             '<p class="empty-note">Nothing listed right now — new work is added as it goes up on Etsy.</p>',
