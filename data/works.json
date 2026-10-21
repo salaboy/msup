@@ -589,6 +589,61 @@
         "first_seen": "2026-10-20",
         "relisted_at": null
       }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“The structure of nature influences the experience of the individuals who dare to challenge it. Wounds from the past and nostalgic feelings creep up from the caves of existence.” From the micro ring of Sabiduría Universal, the innermost of three rings looking at the creation of matter and how consciousness was born out of the emptiness of space. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "Recycled Frame",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "Portales de tiempo pasado",
+          "type": "hand drawn original"
+        },
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/8da37c/8718710112/il_{size}.8718710112_dwt8.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/8da37c/8718710112/il_570xN.8718710112_dwt8.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4600397691",
+        "price": {
+          "amount": "350.00",
+          "currency": "GBP",
+          "raw": "350.00 GBP"
+        },
+        "pub_date": "2026-10-21",
+        "slug": "portales-de-tiempo-pasado-portals-of1792608169",
+        "title": "Portales de Tiempo Pasado / Portals of Past Tense (framed, original, hand drawn, A3)",
+        "url": "https://www.etsy.com/listing/4600397691/portales-de-tiempo-pasado-portals-of1792608169"
+      },
+      "id": "4600397691",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-10-21",
+        "relisted_at": null
+      }
     }
   ]
 }
