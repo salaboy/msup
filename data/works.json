@@ -615,14 +615,42 @@
           "title": "Portales de tiempo pasado",
           "type": "hand drawn original"
         },
-        "image_source": "rss",
+        "image_source": "file",
         "images": [
           {
             "alt": null,
             "base": "https://i.etsystatic.com/59829812/r/il/8da37c/8718710112/il_{size}.8718710112_dwt8.jpg",
-            "height": 429,
-            "src": "https://i.etsystatic.com/59829812/r/il/8da37c/8718710112/il_570xN.8718710112_dwt8.jpg",
-            "width": 570
+            "height": 1128,
+            "src": "https://i.etsystatic.com/59829812/r/il/8da37c/8718710112/il_fullxfull.8718710112_dwt8.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/c53837/8718710084/il_{size}.8718710084_gmf2.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/c53837/8718710084/il_fullxfull.8718710084_gmf2.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/654471/8718710116/il_{size}.8718710116_94h3.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/654471/8718710116/il_fullxfull.8718710116_94h3.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/577f39/8718710130/il_{size}.8718710130_dxgn.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/577f39/8718710130/il_fullxfull.8718710130_dxgn.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/c52aca/8766538703/il_{size}.8766538703_ptql.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/c52aca/8766538703/il_fullxfull.8766538703_ptql.jpg",
+            "width": 794
           }
         ],
         "listing_id": "4600397691",
@@ -642,6 +670,68 @@
         "available": true,
         "delisted_at": null,
         "first_seen": "2026-10-21",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“If time erases all, what does the future hold? At this stage, is consciousness washed up by the time erosion?” From the micro ring of Sabiduría Universal, the innermost of three rings looking at the creation of matter and how consciousness was born out of the emptiness of space. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "Recycled Frame",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "El paso del tiempo, todo lo borra, solo observamos este proceso",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/0e97c3/8772710521/il_{size}.8772710521_66gm.jpg",
+            "height": 575,
+            "src": "https://i.etsystatic.com/59829812/r/il/0e97c3/8772710521/il_fullxfull.8772710521_66gm.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/49d631/8772710523/il_{size}.8772710523_of51.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/49d631/8772710523/il_fullxfull.8772710523_of51.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4601198494",
+        "price": {
+          "amount": "350.00",
+          "currency": "GBP",
+          "raw": "350.00 GBP"
+        },
+        "pub_date": "2026-10-22",
+        "slug": "el-paso-del-tiempo-the-passage-of-time1792697170",
+        "title": "El Paso del Tiempo / The Passage of Time Erases All (framed, original, hand drawn, A3)",
+        "url": "https://www.etsy.com/listing/4601198494/el-paso-del-tiempo-the-passage-of-time1792697170"
+      },
+      "id": "4601198494",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-10-22",
         "relisted_at": null
       }
     }
