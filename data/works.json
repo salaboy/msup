@@ -817,6 +817,82 @@
         "first_seen": "2026-10-23",
         "relisted_at": null
       }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“Multi-dimensional vision becomes available when civilization evolves. Future and past merge into one.” From the micro ring of Sabiduría Universal, the innermost of three rings looking at the creation of matter and how consciousness was born out of the emptiness of space. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "Explorando las dimensiones de nuestra propia existencia",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/7388f2/8735331658/il_{size}.8735331658_flo9.jpg",
+            "height": 561,
+            "src": "https://i.etsystatic.com/59829812/r/il/7388f2/8735331658/il_fullxfull.8735331658_flo9.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/ba8356/8783160211/il_{size}.8783160211_6xms.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/ba8356/8783160211/il_fullxfull.8783160211_6xms.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/77129d/8783160221/il_{size}.8783160221_trs4.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/77129d/8783160221/il_fullxfull.8783160221_trs4.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/72c62d/8735331648/il_{size}.8735331648_ozml.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/72c62d/8735331648/il_fullxfull.8735331648_ozml.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4602370039",
+        "price": {
+          "amount": "350.00",
+          "currency": "GBP",
+          "raw": "350.00 GBP"
+        },
+        "pub_date": "2026-10-24",
+        "slug": "explorando-las-dimensiones-exploring1792861434",
+        "title": "Explorando las Dimensiones / Exploring Dimensions (framed, original, hand drawn, A3)",
+        "url": "https://www.etsy.com/listing/4602370039/explorando-las-dimensiones-exploring1792861434"
+      },
+      "id": "4602370039",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-10-24",
+        "relisted_at": null
+      }
     }
   ]
 }
