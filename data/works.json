@@ -105,8 +105,8 @@
       "id": "4565863595",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-10-25",
         "first_seen": "2026-08-31",
         "relisted_at": null
       }
@@ -891,6 +891,89 @@
         "available": true,
         "delisted_at": null,
         "first_seen": "2026-10-24",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“Particles and antiparticles settled on a balanced combination, matter was formed, and reality was born. Snapshots of the struggle to find balance had been found and extracted from cosmic radiation emitted billions of years ago.” From the micro ring of Sabiduría Universal, the innermost of three rings looking at the creation of matter and how consciousness was born out of the emptiness of space. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "La realidad que no vemos, no es fácil de representar",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/27f9f8/8787392299/il_{size}.8787392299_truh.jpg",
+            "height": 551,
+            "src": "https://i.etsystatic.com/59829812/r/il/27f9f8/8787392299/il_fullxfull.8787392299_truh.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/76679d/8739565812/il_{size}.8739565812_fp6p.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/76679d/8739565812/il_fullxfull.8739565812_fp6p.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/6c9938/8739565806/il_{size}.8739565806_oj2r.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/6c9938/8739565806/il_fullxfull.8739565806_oj2r.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/3832b5/8787392303/il_{size}.8787392303_gnfq.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/3832b5/8787392303/il_fullxfull.8787392303_gnfq.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/cd48e5/8739565836/il_{size}.8739565836_raw2.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/cd48e5/8739565836/il_fullxfull.8739565836_raw2.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4602889758",
+        "price": {
+          "amount": "350.00",
+          "currency": "GBP",
+          "raw": "350.00 GBP"
+        },
+        "pub_date": "2026-10-25",
+        "slug": "la-realidad-que-no-vemos-the-reality-we1792940677",
+        "title": "La Realidad Que No Vemos / The Reality We Don&#39;t See (framed, original, hand drawn, A3)",
+        "url": "https://www.etsy.com/listing/4602889758/la-realidad-que-no-vemos-the-reality-we1792940677"
+      },
+      "id": "4602889758",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-10-25",
         "relisted_at": null
       }
     }
