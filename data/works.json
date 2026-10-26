@@ -206,8 +206,8 @@
       "id": "4566245562",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-10-26",
         "first_seen": "2026-08-31",
         "relisted_at": null
       }
@@ -974,6 +974,89 @@
         "available": true,
         "delisted_at": null,
         "first_seen": "2026-10-25",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“For a long time (approximately 2.43 billion years), particles and antiparticles battled emptiness to form matter as we know it. Civilizations were born without fully understanding the meaning of emptiness, to the point where, today, it is impossible to grasp the true meaning of the word ‘empty’.” From the micro ring of Sabiduría Universal, the innermost of three rings looking at the creation of matter and how consciousness was born out of the emptiness of space. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "Nuestra relación con el vacío",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/91bbaa/8746113852/il_{size}.8746113852_p3p2.jpg",
+            "height": 554,
+            "src": "https://i.etsystatic.com/59829812/r/il/91bbaa/8746113852/il_fullxfull.8746113852_p3p2.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/dcc5e6/8746113848/il_{size}.8746113848_j7qu.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/dcc5e6/8746113848/il_fullxfull.8746113848_j7qu.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/06631e/8746113840/il_{size}.8746113840_nw6i.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/06631e/8746113840/il_fullxfull.8746113840_nw6i.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/27ca34/8793940129/il_{size}.8793940129_rjnf.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/27ca34/8793940129/il_fullxfull.8793940129_rjnf.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/111e78/8746113860/il_{size}.8746113860_qtpv.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/111e78/8746113860/il_fullxfull.8746113860_qtpv.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4603625295",
+        "price": {
+          "amount": "350.00",
+          "currency": "GBP",
+          "raw": "350.00 GBP"
+        },
+        "pub_date": "2026-10-26",
+        "slug": "nuestra-relacion-con-el-vacio-our1793037525",
+        "title": "Nuestra Relación con el Vacío / Our Relationship with the Void (framed, original, A3)",
+        "url": "https://www.etsy.com/listing/4603625295/nuestra-relacion-con-el-vacio-our1793037525"
+      },
+      "id": "4603625295",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-10-26",
         "relisted_at": null
       }
     }
