@@ -291,6 +291,16 @@ def exhibitions(cfg):
                 'like {"01-opening.jpg": "..."}, got %r' % (slug, alts)
             )
 
+        # Validated, not escaped: esc() would leave `javascript:alert(1)`
+        # entirely intact — it contains nothing HTML-escaping touches — and it
+        # would still run when clicked. Only an http(s) link reaches an href.
+        rsvp = (ex.get("rsvp_url") or "").strip()
+        if rsvp and not rsvp.lower().startswith(("http://", "https://")):
+            raise ValueError(
+                "exhibition %r: rsvp_url must be an http(s) link, got %r" % (slug, rsvp)
+            )
+        ex["rsvp_url"] = rsvp
+
         ex["slug"] = slug
         ex["poster"] = poster
         ex["title"] = ex.get("title") or slug
@@ -791,9 +801,25 @@ class Site:
                 % (ex["slug"], ex["collection"])
             )
         cta_html = ""
+        # No RSVP link once the show is over: a live ticket button on a past
+        # event invites people to book a seat at something that has happened.
+        rsvp = ex["rsvp_url"] and not self.is_past(ex)
+        buttons = []
+        if rsvp:
+            buttons.append('<a class="button" href="%s" rel="noopener">%s</a>' % (
+                esc(ex["rsvp_url"]), esc(ex.get("rsvp_label") or "RSVP")
+            ))
         if coll:
-            cta_html = '<p><a class="button button-quiet" href="%s%s">See the collection</a></p>' % (
+            buttons.append('<a class="button button-quiet" href="%s%s">See the collection</a>' % (
                 rel, esc(coll["path"])
+            ))
+        if rsvp:
+            cta_html += '<p class="exhibition-rsvp">%s</p>\n' % esc(
+                ex.get("rsvp_note") or "Reserve your spot here."
+            )
+        if buttons:
+            cta_html += '<p class="exhibition-actions">%s</p>' % "".join(
+                "\n      %s" % b for b in buttons
             )
 
         # The <ul> is built here rather than sitting in the template so that a

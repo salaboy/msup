@@ -133,12 +133,21 @@ moves itself from **Upcoming** to **Past** on its own as the date passes.
 | `in_nav` | Adds **Exhibitions** to the menu. One entry however many shows there are — they share the index. |
 | `on_home` | Puts the poster on the home page, **only while the show is still ahead**. It takes itself down the day after. |
 | `collection` | Slug of a collection → a "See the collection" link. A show is often a collection hung on a wall. |
+| `rsvp_url` | Ticket or booking link (Eventbrite, a form, anything) → an **RSVP** button with a line above it. Must be `http(s)`, and it **disappears by itself once the show is past**. |
+| `rsvp_label` / `rsvp_note` | Override the button text and the line above it. Default: `RSVP` and "Reserve your spot here." |
 | `poster` | The image, relative to `static/` — no leading slash, same rule as a collection banner. Portrait works best; it is never cropped. |
 | `poster_alt` | Alt text. Leave empty if the poster is decorative. |
 | `date_label` | Overrides the written-out date, for something the fields can't say ("Every Thursday in June"). |
 
 The date is the only field that can stop a build, and deliberately so — a show
 is a thing people travel to.
+
+> **When you copy a ticket link out of your browser**, strip any `_gl=...`
+> parameter before pasting it here. That is a Google Analytics cross-domain
+> blob carrying *your own* client ID from the session you copied it in — it
+> expires in minutes, and published it would hand every visitor your ID on the
+> way to the ticket page. A genuine affiliate tag like `aff=oddtdtcreator` is
+> fine and worth keeping.
 
 **To add the photos afterwards**, put them in a folder named after the slug and
 commit:

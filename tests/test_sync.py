@@ -973,6 +973,48 @@ class TestBuildExhibitions(unittest.TestCase):
         _, pages = self.render([self.exhibition(on_home=False)])
         self.assertNotIn("home-banners", pages["index.html"])
 
+    # -- rsvp ------------------------------------------------------------
+
+    RSVP = "https://www.eventbrite.com/e/example-tickets-123?aff=oddtdtcreator"
+
+    def test_rsvp_button_and_note_render_for_an_upcoming_show(self):
+        self.static()
+        _, pages = self.render([self.exhibition(rsvp_url=self.RSVP)], today="2026-01-01")
+        page = pages["exhibitions/%s/index.html" % self.SLUG]
+        self.assertIn('href="%s" rel="noopener">RSVP</a>' % self.RSVP, page)
+        self.assertIn("Reserve your spot here.", page)
+
+    def test_rsvp_disappears_once_the_show_is_past(self):
+        """A live ticket button on a past event invites people to book a seat
+        at something that has already happened."""
+        self.static()
+        _, pages = self.render([self.exhibition(rsvp_url=self.RSVP)], today="2026-11-11")
+        page = pages["exhibitions/%s/index.html" % self.SLUG]
+        self.assertNotIn("eventbrite", page)
+        self.assertNotIn("Reserve your spot", page)
+
+    def test_rsvp_label_and_note_can_be_overridden(self):
+        self.static()
+        ex = self.exhibition(rsvp_url=self.RSVP, rsvp_label="Get tickets",
+                             rsvp_note="Free, but book ahead.")
+        _, pages = self.render([ex], today="2026-01-01")
+        page = pages["exhibitions/%s/index.html" % self.SLUG]
+        self.assertIn(">Get tickets</a>", page)
+        self.assertIn("Free, but book ahead.", page)
+        self.assertNotIn("Reserve your spot here.", page)
+
+    def test_a_non_http_rsvp_url_is_refused_not_escaped(self):
+        """esc() leaves `javascript:alert(1)` completely intact — it contains
+        nothing HTML-escaping touches — and it would still run when clicked."""
+        for bad in ("javascript:alert(1)", "data:text/html,<script>", "/relative"):
+            with self.assertRaises(ValueError):
+                self.build.exhibitions(self.cfg([self.exhibition(rsvp_url=bad)]))
+
+    def test_a_show_with_no_rsvp_url_renders_no_button(self):
+        self.static()
+        _, pages = self.render([self.exhibition()], today="2026-01-01")
+        self.assertNotIn("exhibition-rsvp", pages["exhibitions/%s/index.html" % self.SLUG])
+
     # -- photos ----------------------------------------------------------
 
     def test_photos_are_discovered_from_the_folder_in_filename_order(self):
