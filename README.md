@@ -91,6 +91,34 @@ The banner is the one image that doesn't come from Etsy: put the file in
 usual Etsy photo. Members keep appearing in **Work** as well — a collection is a
 second way in, not a separate shop.
 
+**To link an outside write-up**, add a `spotlight` block to the collection. It
+renders between the foreword and the grid — where someone who has just read
+your own words is most likely to want somebody else's:
+
+```json
+"spotlight": {
+  "url": "https://www.theholyart.com/journal/sebastian-andia-mauricio-salatino",
+  "source": "The Holy Art",
+  "logo": "img/press/the-holy-art.png",
+  "kicker": "Artist spotlight",
+  "title": "Sebastián Andía & Mauricio Salatino",
+  "note": "A ten-question interview about the series.",
+  "label": "Read the interview",
+  "image": "img/press/sabiduria-universal-spotlight.jpg",
+  "image_alt": "The two of them talking, drawings spread across the floor."
+}
+```
+
+`url` is required and must be `http(s)`; everything else is optional, and
+`image` / `logo` follow the same no-leading-slash rule as `banner`. The
+publication's name is set in **text** beside its logo, so the credit still
+reads if the logo fails to load — which is why the logo itself is marked
+decorative.
+
+> The logo is somebody else's trademark. Using it to credit them while linking
+> to their piece about you is ordinary practice, but it is their mark, not
+> yours: don't restyle it, and drop it if they ask.
+
 A listing whose `Collection:` doesn't match anything in `site.json` is left
 exactly as it is, with `Collection` shown as an ordinary row in its spec table,
 and the build prints a warning naming the piece. Nothing is lost to a typo.
@@ -266,7 +294,7 @@ Edit it directly on GitHub and the site rebuilds on save.
 python3 scripts/serve.py                 # build + preview at localhost:8000/msup/
 python3 scripts/sync_etsy.py --dry-run   # show what a sync would change
 python3 scripts/build.py                 # build into _site/
-python3 -m unittest discover -s tests    # 97 tests, no network needed
+python3 -m unittest discover -s tests    # 115 tests, no network needed
 ```
 
 `_site/` is generated and gitignored — never edit it. The only file the sync

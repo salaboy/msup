@@ -116,6 +116,53 @@ GA_ID_RE = re.compile(r"^G-[A-Z0-9]{4,20}$", re.I)
 COLLECTION_SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
+def external_url(value, what):
+    """An absolute http(s) link, or refuse it by name.
+
+    Validated rather than escaped, for the same reason as a slug: esc() leaves
+    `javascript:alert(1)` completely intact — it contains nothing
+    HTML-escaping touches — and it would still run when clicked.
+    """
+    url = (value or "").strip()
+    if url and not url.lower().startswith(("http://", "https://")):
+        raise ValueError("%s must be an http(s) link, got %r" % (what, url))
+    return url
+
+
+def asset_path(value, what):
+    """A path under static/, with no leading slash.
+
+    A leading slash breaks both consumers: rel + "/img/…" yields a doubled
+    slash, and urljoin() would resolve it against the host root, escaping
+    base_path on the project-pages URL.
+    """
+    path = (value or "").strip()
+    if path.startswith("/"):
+        raise ValueError("%s must be site-root-relative with no leading '/', got %r" % (what, path))
+    return path
+
+
+def spotlight(entry, slug):
+    """Validate a collection's `spotlight` — an outside write-up worth linking.
+
+    Optional, and absent on almost every collection, so an entry that is there
+    at all is checked strictly: a press link with a broken URL or a missing
+    logo is worse than no press link.
+    """
+    data = entry.get("spotlight")
+    if not data:
+        return None
+    if not isinstance(data, dict):
+        raise ValueError("collection %r: spotlight must be an object, got %r" % (slug, data))
+    spot = dict(data)
+    spot["url"] = external_url(spot.get("url"), "collection %r: spotlight url" % slug)
+    if not spot["url"]:
+        raise ValueError("collection %r: spotlight needs a url" % slug)
+    spot["image"] = asset_path(spot.get("image"), "collection %r: spotlight image" % slug)
+    spot["logo"] = asset_path(spot.get("logo"), "collection %r: spotlight logo" % slug)
+    return spot
+
+
 def collections(cfg):
     """Validate and normalise cfg['collections'].
 
@@ -154,6 +201,7 @@ def collections(cfg):
         coll["banner"] = banner
         coll["title"] = coll.get("title") or slug
         coll["path"] = "collections/%s/" % slug
+        coll["spotlight"] = spotlight(coll, slug)
         out.append(coll)
     return out
 
@@ -291,15 +339,10 @@ def exhibitions(cfg):
                 'like {"01-opening.jpg": "..."}, got %r' % (slug, alts)
             )
 
-        # Validated, not escaped: esc() would leave `javascript:alert(1)`
-        # entirely intact — it contains nothing HTML-escaping touches — and it
-        # would still run when clicked. Only an http(s) link reaches an href.
-        rsvp = (ex.get("rsvp_url") or "").strip()
-        if rsvp and not rsvp.lower().startswith(("http://", "https://")):
-            raise ValueError(
-                "exhibition %r: rsvp_url must be an http(s) link, got %r" % (slug, rsvp)
-            )
-        ex["rsvp_url"] = rsvp
+        # Validated, not escaped — see external_url().
+        ex["rsvp_url"] = external_url(
+            ex.get("rsvp_url"), "exhibition %r: rsvp_url" % slug
+        )
 
         ex["slug"] = slug
         ex["poster"] = poster
@@ -629,6 +672,65 @@ class Site:
             '<span class="foreword-date">%s</span>' % esc(" · %s" % role) if role else "",
         )
 
+    def collection_spotlight(self, coll, rel):
+        """An outside write-up about the collection, linked between the
+        foreword and the grid — where someone who has just read the artist's
+        own words is most likely to want somebody else's.
+
+        The source's logo is decorative: its name is set in text beside it, so
+        the credit survives the image failing to load, and a screen reader is
+        not made to read the same name twice.
+        """
+        spot = coll.get("spotlight")
+        if not spot:
+            return ""
+
+        logo_html = ""
+        if spot["logo"]:
+            # Intrinsic size, not display size: the browser uses the two to
+            # reserve the right aspect ratio before the file arrives, and CSS
+            # sets how big it actually draws.
+            logo_html = '<img class="spotlight-logo" src="%s%s" alt="" width="%d" ' \
+                        'height="%d" decoding="async">' % (
+                            rel, esc(spot["logo"]),
+                            int(spot.get("logo_width") or 200),
+                            int(spot.get("logo_height") or 166),
+                        )
+
+        media_html = ""
+        if spot["image"]:
+            media_html = (
+                '  <div class="spotlight-media">\n'
+                '    <img src="%s%s" alt="%s" loading="lazy" decoding="async">\n'
+                '  </div>\n' % (rel, esc(spot["image"]), esc(spot.get("image_alt") or ""))
+            )
+
+        return template("partials/collection_spotlight.html").safe_substitute(
+            media_html=media_html,
+            logo_html=logo_html,
+            source=esc(spot.get("source") or "Elsewhere"),
+            kicker=esc(spot.get("kicker") or "Artist spotlight"),
+            title=esc(spot.get("title") or ""),
+            note_html='<p class="spotlight-note">%s</p>' % esc(spot["note"])
+            if spot.get("note") else "",
+            url=esc(spot["url"]),
+            label=esc(spot.get("label") or "Read the interview"),
+        )
+
+    def check_spotlight(self, coll):
+        """Warn about a spotlight image or logo that will 404, for the same
+        reason as check_banner: the static copy loop validates nothing."""
+        spot = coll.get("spotlight")
+        if not spot:
+            return
+        for key in ("image", "logo"):
+            path = spot[key]
+            if path and not os.path.exists(os.path.join(STATIC, path)):
+                self.warnings.append(
+                    "collection %r: spotlight %s missing — expected static/%s"
+                    % (coll["slug"], key, path)
+                )
+
     def build_collection_page(self, coll, works):
         out_path = "collections/%s/index.html" % coll["slug"]
         rel = rel_prefix(out_path)
@@ -637,6 +739,7 @@ class Site:
             rel=rel,
             banner_html=self.collection_banner(coll, rel, "<h1>%s</h1>" % esc(coll["title"])),
             foreword_html=self.collection_foreword(coll),
+            spotlight_html=self.collection_spotlight(coll, rel),
             works_html=self.grid(works, rel),
             empty_html="" if works else
             '<p class="empty-note">Nothing from this collection is listed right now.</p>',
@@ -1088,6 +1191,7 @@ class Site:
 
         for coll in self.collections:
             self.check_banner(coll)
+            self.check_spotlight(coll)
         for ex in self.exhibitions:
             self.check_poster(ex)
 

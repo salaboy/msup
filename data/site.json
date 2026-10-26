@@ -21,7 +21,19 @@
       "banner": "img/collections/sabiduria-universal.jpg",
       "banner_alt": "A detail from the series: a rayed sun inscribed with symbols, above interlocking forms drawn in green, gold, cyan and black.",
       "banner_width": 1200,
-      "banner_height": 800
+      "banner_height": 800,
+      "spotlight": {
+        "url": "https://www.theholyart.com/journal/sebastian-andia-mauricio-salatino",
+        "source": "The Holy Art",
+        "logo": "img/press/the-holy-art.png",
+        "kicker": "Artist spotlight",
+        "title": "Sebastián Andía & Mauricio Salatino",
+        "note": "A ten-question interview about the series — how the collaboration started, what the two of them are chasing, and where it goes next.",
+        "label": "Read the interview",
+        "image": "img/press/sabiduria-universal-spotlight.jpg",
+        "image_alt": "Mauricio Salatino and Sebastián Andía sitting side by side mid-conversation, with drawings from the series spread across the floor in front of them."
+      }
+
     }
   ],
   "exhibitions": [

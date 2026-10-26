@@ -276,6 +276,91 @@ h2 { font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem); font-weight: 600; letter
 }
 .foreword-body p + p { margin-top: 0.9em; }
 
+/* ---------- spotlight: outside coverage ---------- */
+
+/* A write-up by somebody else, sitting between the artist's own foreword and
+   the work itself. Shares the tinted panel of .foreword-panel so the two read
+   as a pair of asides rather than two unrelated boxes. */
+.spotlight {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  background: var(--well);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.spotlight > * { min-width: 0; }
+
+@media (min-width: 700px) {
+  .spotlight { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr); }
+}
+
+/* The photo bleeds to the panel edge on its own side. It is positioned out of
+   flow so it contributes nothing to sizing: the panel's height comes from the
+   words beside it, and the photo fills whatever that turns out to be. Left in
+   flow, a tall portrait would set the height and leave the text stranded in a
+   half-empty box. object-position favours the upper third, where the faces
+   are — a centred crop would cut both of them off. */
+.spotlight-media {
+  position: relative;
+  align-self: stretch;
+  min-height: 260px;
+}
+.spotlight-media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 16%;
+}
+
+.spotlight-text {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+/* The source's own mark beside its name in our type — the credit still reads
+   if the logo 404s, which a hotlinked third-party asset eventually might. */
+.spotlight-source {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.spotlight-logo { width: 28px; height: auto; flex: none; }
+
+.spotlight-kicker {
+  margin: 0;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+
+.spotlight-title {
+  margin: 0;
+  font-size: clamp(1.15rem, 1rem + 0.7vw, 1.5rem);
+  line-height: 1.25;
+}
+
+.spotlight-note {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+.spotlight-actions { margin: 0.4rem 0 0; }
+
 /* ---------- work grid ---------- */
 
 .work-grid {

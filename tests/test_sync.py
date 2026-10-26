@@ -774,6 +774,62 @@ class TestBuildCollections(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.build.collections(self.cfg([self.collection(), self.collection()]))
 
+    SPOTLIGHT = {
+        "url": "https://example.org/journal/two-artists",
+        "source": "The Holy Art",
+        "logo": "img/press/holy.png",
+        "kicker": "Artist spotlight",
+        "title": "Two artists",
+        "note": "A ten-question interview.",
+        "label": "Read the interview",
+        "image": "img/press/two-artists.jpg",
+        "image_alt": "The two of them talking.",
+    }
+
+    def test_spotlight_sits_between_the_foreword_and_the_grid(self):
+        """Where someone who has just read the artist's own words is most
+        likely to want somebody else's."""
+        _, pages = self.render([self.collection(spotlight=self.SPOTLIGHT)])
+        page = pages["collections/winter/index.html"]
+        self.assertLess(page.index("spotlight"), page.index("work-grid"))
+        self.assertIn("Read the interview", page)
+        self.assertIn("The Holy Art", page)
+        self.assertIn('href="https://example.org/journal/two-artists"', page)
+
+    def test_spotlight_logo_is_decorative_beside_the_source_in_text(self):
+        """The credit has to survive the logo failing to load, and a screen
+        reader should not read the same name twice."""
+        _, pages = self.render([self.collection(spotlight=self.SPOTLIGHT)])
+        page = pages["collections/winter/index.html"]
+        self.assertIn('class="spotlight-logo" src="../../img/press/holy.png" alt=""', page)
+        self.assertIn("<span>The Holy Art</span>", page)
+
+    def test_spotlight_assets_are_depth_relative(self):
+        _, pages = self.render([self.collection(spotlight=self.SPOTLIGHT)])
+        page = pages["collections/winter/index.html"]
+        self.assertIn('src="../../img/press/two-artists.jpg"', page)
+
+    def test_a_collection_without_a_spotlight_renders_none(self):
+        _, pages = self.render([self.collection()])
+        self.assertNotIn("spotlight", pages["collections/winter/index.html"])
+
+    def test_a_broken_spotlight_is_refused_not_escaped(self):
+        for bad in ({"url": "javascript:alert(1)"}, {"url": ""}, {"url": "/relative"}):
+            spot = dict(self.SPOTLIGHT, **bad)
+            with self.assertRaises(ValueError):
+                self.build.collections(self.cfg([self.collection(spotlight=spot)]))
+        for bad in ({"image": "/img/x.jpg"}, {"logo": "/img/l.png"}):
+            spot = dict(self.SPOTLIGHT, **bad)
+            with self.assertRaises(ValueError):
+                self.build.collections(self.cfg([self.collection(spotlight=spot)]))
+        with self.assertRaises(ValueError):
+            self.build.collections(self.cfg([self.collection(spotlight="a link")]))
+
+    def test_missing_spotlight_files_are_reported(self):
+        site, _ = self.render([self.collection(spotlight=self.SPOTLIGHT)])
+        self.assertTrue(any("spotlight image missing" in w for w in site.warnings))
+        self.assertTrue(any("spotlight logo missing" in w for w in site.warnings))
+
     def test_site_without_collections_is_unchanged(self):
         """An older site.json with no `collections` key must still build."""
         cfg = self.cfg([])
