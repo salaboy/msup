@@ -110,8 +110,14 @@ your own words is most likely to want somebody else's:
 ```
 
 `url` is required and must be `http(s)`; everything else is optional, and
-`image` / `logo` follow the same no-leading-slash rule as `banner`. The
-publication's name is set in **text** beside its logo, so the credit still
+`image` / `logo` follow the same no-leading-slash rule as `banner`. `kicker`
+is the small heading above the card (default "Artist spotlight"). The card is
+shaped like a home-page teaser — framed image, words beneath — and is capped
+at one teaser's width: it points somewhere else, so it shouldn't outweigh the
+work. Crop `image` to 3:2 before committing it; the frame crops to that ratio
+anyway, so a tall photo just ships pixels nobody sees.
+
+The publication's name is set in **text** beside its logo, so the credit still
 reads if the logo fails to load — which is why the logo itself is marked
 decorative.
 

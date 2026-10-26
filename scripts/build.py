@@ -700,9 +700,10 @@ class Site:
         media_html = ""
         if spot["image"]:
             media_html = (
-                '  <div class="spotlight-media">\n'
-                '    <img src="%s%s" alt="%s" loading="lazy" decoding="async">\n'
-                '  </div>\n' % (rel, esc(spot["image"]), esc(spot.get("image_alt") or ""))
+                '    <div class="banner-frame spotlight-frame">\n'
+                '      <img src="%s%s" alt="%s" width="1200" height="800" '
+                'loading="lazy" decoding="async">\n'
+                '    </div>\n' % (rel, esc(spot["image"]), esc(spot.get("image_alt") or ""))
             )
 
         return template("partials/collection_spotlight.html").safe_substitute(
