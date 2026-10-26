@@ -786,6 +786,43 @@ class Site:
                 "exhibition %r: poster missing — expected static/%s" % (ex["slug"], ex["poster"])
             )
 
+    def rsvp_live(self, ex):
+        """Whether the booking link should be shown at all: there is one, and
+        the show has not happened yet.
+
+        One predicate rather than the same condition written at each call
+        site — the show's own page and the home teaser must never disagree
+        about whether tickets are still a thing.
+        """
+        return bool(ex["rsvp_url"]) and not self.is_past(ex)
+
+    def exhibition_cta(self, ex, buttons):
+        """The RSVP line and the row of buttons under a show's details.
+
+        `buttons` are already-rendered links belonging to the calling page;
+        the RSVP goes in front of them, because booking a place is the one
+        thing a visitor to an upcoming show is there to do. Empty strings are
+        dropped, so a caller can pass a conditional link without guarding it.
+        """
+        row = [b for b in ([self.rsvp_button(ex)] + list(buttons)) if b]
+        out = ""
+        if self.rsvp_live(ex):
+            out += '<p class="exhibition-rsvp">%s</p>\n' % esc(
+                ex.get("rsvp_note") or "Reserve your spot here."
+            )
+        if row:
+            out += '<p class="exhibition-actions">%s</p>' % "".join(
+                "\n      %s" % b for b in row
+            )
+        return out
+
+    def rsvp_button(self, ex):
+        if not self.rsvp_live(ex):
+            return ""
+        return '<a class="button" href="%s" rel="noopener">%s</a>' % (
+            esc(ex["rsvp_url"]), esc(ex.get("rsvp_label") or "RSVP")
+        )
+
     def build_exhibition_page(self, ex):
         out_path = "%s%s/index.html" % (EXHIBITIONS_PATH, ex["slug"])
         rel = rel_prefix(out_path)
@@ -800,27 +837,10 @@ class Site:
                 "exhibition %r: collection %r matches no entry in site.json — link omitted"
                 % (ex["slug"], ex["collection"])
             )
-        cta_html = ""
-        # No RSVP link once the show is over: a live ticket button on a past
-        # event invites people to book a seat at something that has happened.
-        rsvp = ex["rsvp_url"] and not self.is_past(ex)
-        buttons = []
-        if rsvp:
-            buttons.append('<a class="button" href="%s" rel="noopener">%s</a>' % (
-                esc(ex["rsvp_url"]), esc(ex.get("rsvp_label") or "RSVP")
-            ))
-        if coll:
-            buttons.append('<a class="button button-quiet" href="%s%s">See the collection</a>' % (
-                rel, esc(coll["path"])
-            ))
-        if rsvp:
-            cta_html += '<p class="exhibition-rsvp">%s</p>\n' % esc(
-                ex.get("rsvp_note") or "Reserve your spot here."
-            )
-        if buttons:
-            cta_html += '<p class="exhibition-actions">%s</p>' % "".join(
-                "\n      %s" % b for b in buttons
-            )
+        cta_html = self.exhibition_cta(ex, [
+            '<a class="button button-quiet" href="%s%s">See the collection</a>'
+            % (rel, esc(coll["path"])) if coll else ""
+        ])
 
         # The <ul> is built here rather than sitting in the template so that a
         # show with no photos yet emits no empty list at all — an empty <ul>
@@ -1083,11 +1103,17 @@ class Site:
         # Only shows still ahead of us, and only those that asked. A past show
         # taking up the top of the home page would be the site telling people
         # to turn up to something that already happened.
+        #
+        # Details turns quiet when there is an RSVP beside it: the home page is
+        # where most people land, so booking should be the one filled button.
         home_exhibitions = "\n".join(
             self.exhibition_banner(
                 ex, "",
                 "<h2>%s</h2>" % esc(ex["title"]),
-                '<p><a class="button" href="%s">Details</a></p>' % esc(ex["path"]),
+                self.exhibition_cta(ex, [
+                    '<a class="button%s" href="%s">Details</a>'
+                    % (" button-quiet" if self.rsvp_live(ex) else "", esc(ex["path"]))
+                ]),
             )
             for ex in self.upcoming() if ex.get("on_home")
         )

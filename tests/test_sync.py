@@ -1015,6 +1015,26 @@ class TestBuildExhibitions(unittest.TestCase):
         _, pages = self.render([self.exhibition()], today="2026-01-01")
         self.assertNotIn("exhibition-rsvp", pages["exhibitions/%s/index.html" % self.SLUG])
 
+    def test_the_home_teaser_carries_the_rsvp_too(self):
+        """The home page is where most people land, so booking has to be
+        reachable without a hop through the show's own page first."""
+        self.static()
+        _, pages = self.render([self.exhibition(rsvp_url=self.RSVP)], today="2026-01-01")
+        home = pages["index.html"]
+        self.assertIn('href="%s" rel="noopener">RSVP</a>' % self.RSVP, home)
+        self.assertIn("Reserve your spot here.", home)
+
+    def test_details_goes_quiet_only_when_an_rsvp_sits_beside_it(self):
+        """One filled button per teaser, or neither leads."""
+        self.static()
+        _, pages = self.render([self.exhibition(rsvp_url=self.RSVP)], today="2026-01-01")
+        self.assertIn('class="button button-quiet" href="exhibitions/%s/">Details' % self.SLUG,
+                      pages["index.html"])
+
+        _, pages = self.render([self.exhibition()], today="2026-01-01")
+        self.assertIn('class="button" href="exhibitions/%s/">Details' % self.SLUG,
+                      pages["index.html"])
+
     # -- photos ----------------------------------------------------------
 
     def test_photos_are_discovered_from_the_folder_in_filename_order(self):
