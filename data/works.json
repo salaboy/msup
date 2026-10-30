@@ -584,8 +584,8 @@
       "id": "4599651095",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-10-30",
         "first_seen": "2026-10-20",
         "relisted_at": null
       }
@@ -667,8 +667,8 @@
       "id": "4600397691",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-10-30",
         "first_seen": "2026-10-21",
         "relisted_at": null
       }
@@ -1245,6 +1245,89 @@
           "Collection": "Sabiduría Universal"
         },
         "fields": {
+          "description": "“You would be surprised by how chaotic reality was in the early days. The chaos produced some fascinating organisms that couldn't thrive in pure chaos. Early organisms had difficulty adapting to a new and forever-changing harsh environment.” From the micro ring of Sabiduría Universal, the innermost of three rings looking at the creation of matter and how consciousness was born out of the emptiness of space. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "La resonancia del ciclo acústico",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/93c85f/8770288244/il_{size}.8770288244_rirg.jpg",
+            "height": 549,
+            "src": "https://i.etsystatic.com/59829812/r/il/93c85f/8770288244/il_fullxfull.8770288244_rirg.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/24c9b8/8818108147/il_{size}.8818108147_hrh2.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/24c9b8/8818108147/il_fullxfull.8818108147_hrh2.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/88f000/8770288250/il_{size}.8770288250_s3w3.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/88f000/8770288250/il_fullxfull.8770288250_s3w3.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/fb3764/8770288246/il_{size}.8770288246_ciii.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/fb3764/8770288246/il_fullxfull.8770288246_ciii.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/f062da/8770288262/il_{size}.8770288262_b8yv.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/f062da/8770288262/il_fullxfull.8770288262_b8yv.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4606517149",
+        "price": {
+          "amount": "350.00",
+          "currency": "GBP",
+          "raw": "350.00 GBP"
+        },
+        "pub_date": "2026-10-30",
+        "slug": "la-resonancia-del-ciclo-acustico-the1793385793",
+        "title": "La Resonancia del Ciclo Acústico / The Acoustic Cycle (framed, original, hand drawn, A3)",
+        "url": "https://www.etsy.com/listing/4606517149/la-resonancia-del-ciclo-acustico-the1793385793"
+      },
+      "id": "4606517149",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-10-30",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
           "description": "“If time goes forward, can you see it in a mirror? Does it shine, or does it have a matte coating?” From the micro ring of Sabiduría Universal, the innermost of three rings looking at the creation of matter and how consciousness was born out of the emptiness of space. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
           "framed": "yes",
           "size": "A3 (29.7 x 42.0 cm)",
@@ -1294,6 +1377,89 @@
         "url": "https://www.etsy.com/listing/4606525262/pasado-brillante-brilliant-past-the"
       },
       "id": "4606525262",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-10-30",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“Hidden shapes are always there. The trained eye can spot mysterious figures in the dark.” From the micro ring of Sabiduría Universal, the innermost of three rings looking at the creation of matter and how consciousness was born out of the emptiness of space. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "Entre la historia y la naturaleza",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/fa4f26/8770337250/il_{size}.8770337250_imd0.jpg",
+            "height": 555,
+            "src": "https://i.etsystatic.com/59829812/r/il/fa4f26/8770337250/il_fullxfull.8770337250_imd0.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/e5404d/8770337208/il_{size}.8770337208_29nv.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/e5404d/8770337208/il_fullxfull.8770337208_29nv.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/7dae3f/8818157075/il_{size}.8818157075_j2as.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/7dae3f/8818157075/il_fullxfull.8818157075_j2as.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/066480/8770337216/il_{size}.8770337216_8qth.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/066480/8770337216/il_fullxfull.8770337216_8qth.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/a68335/8818157081/il_{size}.8818157081_3c9o.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/a68335/8818157081/il_fullxfull.8818157081_3c9o.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4606540874",
+        "price": {
+          "amount": "350.00",
+          "currency": "GBP",
+          "raw": "350.00 GBP"
+        },
+        "pub_date": "2026-10-30",
+        "slug": "entre-la-historia-y-la-naturaleza1793386160",
+        "title": "Entre la Historia y la Naturaleza / Between History and Nature (framed, original, A3)",
+        "url": "https://www.etsy.com/listing/4606540874/entre-la-historia-y-la-naturaleza1793386160"
+      },
+      "id": "4606540874",
       "source": "etsy",
       "sync": {
         "available": true,
