@@ -295,8 +295,8 @@
       "id": "4566516285",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-10-30",
         "first_seen": "2026-09-01",
         "relisted_at": null
       }
@@ -1057,6 +1057,89 @@
         "available": true,
         "delisted_at": null,
         "first_seen": "2026-10-26",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“If time stays still, do we face the void? Were we born from the emptiness of space? The vacuum effect of space generates waves in the surrounding matter, creating chaos.” From the micro ring of Sabiduría Universal, the innermost of three rings looking at the creation of matter and how consciousness was born out of the emptiness of space. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "Los elementos se combinan antes de nacer",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/68eee7/8770083232/il_{size}.8770083232_mmko.jpg",
+            "height": 1140,
+            "src": "https://i.etsystatic.com/59829812/r/il/68eee7/8770083232/il_fullxfull.8770083232_mmko.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/a1973a/8817902325/il_{size}.8817902325_f593.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/a1973a/8817902325/il_fullxfull.8817902325_f593.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/807c81/8770083224/il_{size}.8770083224_1m3u.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/807c81/8770083224/il_fullxfull.8770083224_1m3u.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/a6b284/8770083226/il_{size}.8770083226_fwkk.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/a6b284/8770083226/il_fullxfull.8770083226_fwkk.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/ee76e0/8770083234/il_{size}.8770083234_r2ar.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/ee76e0/8770083234/il_fullxfull.8770083234_r2ar.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4606510048",
+        "price": {
+          "amount": "350.00",
+          "currency": "GBP",
+          "raw": "350.00 GBP"
+        },
+        "pub_date": "2026-10-30",
+        "slug": "los-elementos-se-combinan-the-elements1793383197",
+        "title": "Los Elementos Se Combinan / The Elements Combine Before Birth (framed, original, A3)",
+        "url": "https://www.etsy.com/listing/4606510048/los-elementos-se-combinan-the-elements1793383197"
+      },
+      "id": "4606510048",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-10-30",
         "relisted_at": null
       }
     }
