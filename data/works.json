@@ -412,8 +412,8 @@
       "id": "4566729965",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-10-30",
         "first_seen": "2026-09-01",
         "relisted_at": null
       }
@@ -1057,6 +1057,89 @@
         "available": true,
         "delisted_at": null,
         "first_seen": "2026-10-26",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“Creation evolves. Time dictates the synergy between organisms bound to nature's infinite loop.” From the micro ring of Sabiduría Universal, the innermost of three rings looking at the creation of matter and how consciousness was born out of the emptiness of space. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "Línea temporal dinámica, la creación de las cosas",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/903d78/8770163800/il_{size}.8770163800_46i5.jpg",
+            "height": 552,
+            "src": "https://i.etsystatic.com/59829812/r/il/903d78/8770163800/il_fullxfull.8770163800_46i5.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/541235/8770163784/il_{size}.8770163784_feau.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/541235/8770163784/il_fullxfull.8770163784_feau.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/b8b983/8770163804/il_{size}.8770163804_dyvm.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/b8b983/8770163804/il_fullxfull.8770163804_dyvm.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/3a615d/8770163790/il_{size}.8770163790_jxfu.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/3a615d/8770163790/il_fullxfull.8770163790_jxfu.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/a4aa6e/8817983527/il_{size}.8817983527_f2ii.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/a4aa6e/8817983527/il_fullxfull.8817983527_f2ii.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4606500605",
+        "price": {
+          "amount": "350.00",
+          "currency": "GBP",
+          "raw": "350.00 GBP"
+        },
+        "pub_date": "2026-10-30",
+        "slug": "linea-temporal-dinamica-dynamic-temporal",
+        "title": "Línea Temporal Dinámica / Dynamic Temporal Line (framed, original, hand drawn, A3)",
+        "url": "https://www.etsy.com/listing/4606500605/linea-temporal-dinamica-dynamic-temporal"
+      },
+      "id": "4606500605",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-10-30",
         "relisted_at": null
       }
     },
