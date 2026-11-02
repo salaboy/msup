@@ -729,8 +729,8 @@
       "id": "4601198494",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-02",
         "first_seen": "2026-10-22",
         "relisted_at": null
       }
@@ -1465,6 +1465,96 @@
         "available": true,
         "delisted_at": null,
         "first_seen": "2026-10-30",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“The forces of nature maintain structural conformance. Silence is crafted by the inner workings of galaxies in mysterious ways.” From the expansion ring of Sabiduría Universal, the middle of three rings, where the work stops to reflect on how we arrived at the present. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A2 (42.0 x 59.4 cm)",
+          "title": "La estructura del silencio",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/3d0e47/8785385874/il_{size}.8785385874_6fxl.jpg",
+            "height": 564,
+            "src": "https://i.etsystatic.com/59829812/r/il/3d0e47/8785385874/il_fullxfull.8785385874_6fxl.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/c26d76/8785389074/il_{size}.8785389074_3vu5.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/c26d76/8785389074/il_fullxfull.8785389074_3vu5.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/d16dbe/8785385866/il_{size}.8785385866_81l1.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/d16dbe/8785385866/il_fullxfull.8785385866_81l1.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/89a735/8785385878/il_{size}.8785385878_nkrv.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/89a735/8785385878/il_fullxfull.8785385878_nkrv.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/897fa1/8785385868/il_{size}.8785385868_42l6.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/897fa1/8785385868/il_fullxfull.8785385868_42l6.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/bc9302/8785385858/il_{size}.8785385858_hfci.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/bc9302/8785385858/il_fullxfull.8785385858_hfci.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4608367422",
+        "price": {
+          "amount": "500.00",
+          "currency": "GBP",
+          "raw": "500.00 GBP"
+        },
+        "pub_date": "2026-11-02",
+        "slug": "la-estructura-del-silencio-the-structure1793641666",
+        "title": "La Estructura del Silencio / The Structure of Silence (framed, original, A2)",
+        "url": "https://www.etsy.com/listing/4608367422/la-estructura-del-silencio-the-structure1793641666"
+      },
+      "id": "4608367422",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-02",
         "relisted_at": null
       }
     }
