@@ -812,8 +812,8 @@
       "id": "4601796486",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-02",
         "first_seen": "2026-10-23",
         "relisted_at": null
       }
@@ -888,8 +888,8 @@
       "id": "4602370039",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-02",
         "first_seen": "2026-10-24",
         "relisted_at": null
       }
@@ -971,8 +971,8 @@
       "id": "4602889758",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-02",
         "first_seen": "2026-10-25",
         "relisted_at": null
       }
@@ -1550,6 +1550,269 @@
         "url": "https://www.etsy.com/listing/4608367422/la-estructura-del-silencio-the-structure1793641666"
       },
       "id": "4608367422",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-02",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“Perception is built by our senses, and reality is shaped by the passage of time. Tomorrow, when you wake up, do a reality check and stop any kind of daydreaming.” From the expansion ring of Sabiduría Universal, the middle of three rings, where the work stops to reflect on how we arrived at the present. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A2 (42.0 x 59.4 cm)",
+          "title": "Definiendo nuestra propia realidad",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/fed54c/8834037679/il_{size}.8834037679_7f0p.jpg",
+            "height": 567,
+            "src": "https://i.etsystatic.com/59829812/r/il/fed54c/8834037679/il_fullxfull.8834037679_7f0p.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/83169c/8834037675/il_{size}.8834037675_2vtc.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/83169c/8834037675/il_fullxfull.8834037675_2vtc.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/201946/8786214030/il_{size}.8786214030_tojm.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/201946/8786214030/il_fullxfull.8786214030_tojm.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/502d74/8786214022/il_{size}.8786214022_gld5.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/502d74/8786214022/il_fullxfull.8786214022_gld5.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/7a9600/8786214028/il_{size}.8786214028_9wxi.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/7a9600/8786214028/il_fullxfull.8786214028_9wxi.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4608447423",
+        "price": {
+          "amount": "500.00",
+          "currency": "GBP",
+          "raw": "500.00 GBP"
+        },
+        "pub_date": "2026-11-02",
+        "slug": "definiendo-nuestra-propia-realidad1793650438",
+        "title": "Definiendo Nuestra Propia Realidad / Defining Our Own Reality (framed, original, A2)",
+        "url": "https://www.etsy.com/listing/4608447423/definiendo-nuestra-propia-realidad1793650438"
+      },
+      "id": "4608447423",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-02",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“Definitions were created to encapsulate concepts into ideas. Time and space combined provided entities with the required dimensions to think and build complex structures to process future events.” From the expansion ring of Sabiduría Universal, the middle of three rings, where the work stops to reflect on how we arrived at the present. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A2 (42.0 x 59.4 cm)",
+          "title": "Diálogo con el universo",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/c0ff0e/8834015313/il_{size}.8834015313_d0sn.jpg",
+            "height": 1109,
+            "src": "https://i.etsystatic.com/59829812/r/il/c0ff0e/8834015313/il_fullxfull.8834015313_d0sn.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/957a78/8786191378/il_{size}.8786191378_rwbt.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/957a78/8786191378/il_fullxfull.8786191378_rwbt.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/32f359/8786191390/il_{size}.8786191390_sxhy.jpg",
+            "height": 1059,
+            "src": "https://i.etsystatic.com/59829812/r/il/32f359/8786191390/il_fullxfull.8786191390_sxhy.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/0ce32e/8834015299/il_{size}.8834015299_s320.jpg",
+            "height": 1059,
+            "src": "https://i.etsystatic.com/59829812/r/il/0ce32e/8834015299/il_fullxfull.8834015299_s320.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/87d89d/8786191392/il_{size}.8786191392_d8sh.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/87d89d/8786191392/il_fullxfull.8786191392_d8sh.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/a2be5d/8786191398/il_{size}.8786191398_thi4.jpg",
+            "height": 1059,
+            "src": "https://i.etsystatic.com/59829812/r/il/a2be5d/8786191398/il_fullxfull.8786191398_thi4.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4608464986",
+        "price": {
+          "amount": "500.00",
+          "currency": "GBP",
+          "raw": "500.00 GBP"
+        },
+        "pub_date": "2026-11-02",
+        "slug": "dialogo-con-el-universo-dialogue-with1793650236",
+        "title": "Diálogo con el Universo / Dialogue with the Universe (framed, original, A2)",
+        "url": "https://www.etsy.com/listing/4608464986/dialogo-con-el-universo-dialogue-with1793650236"
+      },
+      "id": "4608464986",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-02",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“Ancient civilizations created coded transmissions and ciphers to protect their secrets. A lot of time was wasted by protecting knowledge that benefited all tribes. The exodus of knowledge started when secrecy became the defacto modus operandi.” From the expansion ring of Sabiduría Universal, the middle of three rings, where the work stops to reflect on how we arrived at the present. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A2 (42.0 x 59.4 cm)",
+          "title": "Éxodo",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/54f30e/8834055351/il_{size}.8834055351_8hcr.jpg",
+            "height": 1137,
+            "src": "https://i.etsystatic.com/59829812/r/il/54f30e/8834055351/il_fullxfull.8834055351_8hcr.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/a4c9ac/8786231448/il_{size}.8786231448_1rxr.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/a4c9ac/8786231448/il_fullxfull.8786231448_1rxr.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/aca2b1/8786231452/il_{size}.8786231452_avjj.jpg",
+            "height": 1059,
+            "src": "https://i.etsystatic.com/59829812/r/il/aca2b1/8786231452/il_fullxfull.8786231452_avjj.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/82dfb6/8786231464/il_{size}.8786231464_tpht.jpg",
+            "height": 1059,
+            "src": "https://i.etsystatic.com/59829812/r/il/82dfb6/8786231464/il_fullxfull.8786231464_tpht.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/87f240/8786231476/il_{size}.8786231476_6lda.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/87f240/8786231476/il_fullxfull.8786231476_6lda.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/b41709/8786231482/il_{size}.8786231482_svuq.jpg",
+            "height": 1059,
+            "src": "https://i.etsystatic.com/59829812/r/il/b41709/8786231482/il_fullxfull.8786231482_svuq.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4608469574",
+        "price": {
+          "amount": "500.00",
+          "currency": "GBP",
+          "raw": "500.00 GBP"
+        },
+        "pub_date": "2026-11-02",
+        "slug": "exodo-exodus-framed-original-hand-drawn1793650645",
+        "title": "Éxodo / Exodus (framed, original, hand drawn, A2)",
+        "url": "https://www.etsy.com/listing/4608469574/exodo-exodus-framed-original-hand-drawn1793650645"
+      },
+      "id": "4608469574",
       "source": "etsy",
       "sync": {
         "available": true,
