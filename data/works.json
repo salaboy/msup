@@ -1054,8 +1054,8 @@
       "id": "4603625295",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-04",
         "first_seen": "2026-10-26",
         "relisted_at": null
       }
@@ -1818,6 +1818,103 @@
         "available": true,
         "delisted_at": null,
         "first_seen": "2026-11-02",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "“Creating something new is hard. The universe has its ways. Slowly but surely, things move forward.” From the expansion ring of Sabiduría Universal, the middle of three rings, where the work stops to reflect on how we arrived at the present. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A2 (42.0 x 59.4 cm)",
+          "title": "El colapso de la creación, el universo se decidió en este momento a crear algo nuevo",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/abce27/8840061977/il_{size}.8840061977_63dp.jpg",
+            "height": 551,
+            "src": "https://i.etsystatic.com/59829812/r/il/abce27/8840061977/il_fullxfull.8840061977_63dp.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/364572/8792241822/il_{size}.8792241822_mg9l.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/364572/8792241822/il_fullxfull.8792241822_mg9l.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/adb410/8840061981/il_{size}.8840061981_rnrv.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/adb410/8840061981/il_fullxfull.8840061981_rnrv.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/bbed08/8792241860/il_{size}.8792241860_8p9t.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/bbed08/8792241860/il_fullxfull.8792241860_8p9t.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/b87f9d/8792241834/il_{size}.8792241834_q8ff.jpg",
+            "height": 1059,
+            "src": "https://i.etsystatic.com/59829812/r/il/b87f9d/8792241834/il_fullxfull.8792241834_q8ff.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/df75ae/8792241818/il_{size}.8792241818_q0pa.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/df75ae/8792241818/il_fullxfull.8792241818_q0pa.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/c7ebfd/8792241820/il_{size}.8792241820_rqco.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/c7ebfd/8792241820/il_fullxfull.8792241820_rqco.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4610011161",
+        "price": {
+          "amount": "500.00",
+          "currency": "GBP",
+          "raw": "500.00 GBP"
+        },
+        "pub_date": "2026-11-04",
+        "slug": "el-colapso-de-la-creacion-the-collapse1793826367",
+        "title": "El Colapso de la Creación / The Collapse of Creation (framed, original, A2)",
+        "url": "https://www.etsy.com/listing/4610011161/el-colapso-de-la-creacion-the-collapse1793826367"
+      },
+      "id": "4610011161",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-04",
         "relisted_at": null
       }
     }
