@@ -1303,8 +1303,8 @@
       "id": "4606517149",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-08",
         "first_seen": "2026-10-30",
         "relisted_at": null
       }
@@ -1379,8 +1379,8 @@
       "id": "4606525262",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-08",
         "first_seen": "2026-10-30",
         "relisted_at": null
       }
@@ -2027,6 +2027,110 @@
           "Collection": "Sabiduría Universal"
         },
         "fields": {
+          "description": "“Entangled entities tend to persist over time. A strong bond holds the past and the present together, allowing chemical fusion to materialize.” From the expansion ring of Sabiduría Universal, the middle of three rings, where the work stops to reflect on how we arrived at the present. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A2 (42.0 x 59.4 cm)",
+          "title": "Enredos fundamentales, ondas indescifrables",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/0b38ac/8818656232/il_{size}.8818656232_ofsd.jpg",
+            "height": 540,
+            "src": "https://i.etsystatic.com/59829812/r/il/0b38ac/8818656232/il_fullxfull.8818656232_ofsd.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/dfccad/8818656226/il_{size}.8818656226_cwzh.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/dfccad/8818656226/il_fullxfull.8818656226_cwzh.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/303966/8866468809/il_{size}.8866468809_rlh2.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/303966/8866468809/il_fullxfull.8866468809_rlh2.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/37f552/8866468827/il_{size}.8866468827_8t8p.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/37f552/8866468827/il_fullxfull.8866468827_8t8p.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/c88a35/8866468813/il_{size}.8866468813_b9wh.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/c88a35/8866468813/il_fullxfull.8866468813_b9wh.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/628edd/8818656258/il_{size}.8818656258_6c5c.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/628edd/8818656258/il_fullxfull.8818656258_6c5c.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/343f4d/8818656250/il_{size}.8818656250_ppug.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/343f4d/8818656250/il_fullxfull.8818656250_ppug.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/4b94a5/8818656252/il_{size}.8818656252_a6f7.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/4b94a5/8818656252/il_fullxfull.8818656252_a6f7.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4612473769",
+        "price": {
+          "amount": "500.00",
+          "currency": "GBP",
+          "raw": "500.00 GBP"
+        },
+        "pub_date": "2026-11-08",
+        "slug": "enredos-fundamentales-fundamental1794138952",
+        "title": "Enredos Fundamentales / Fundamental Entanglements (framed, original, A2)",
+        "url": "https://www.etsy.com/listing/4612473769/enredos-fundamentales-fundamental1794138952"
+      },
+      "id": "4612473769",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-08",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
           "description": "“We have tried very hard to pass on knowledge from generation to generation, but misunderstandings and noise in the underlying channels still cause a lot to be lost. What can we do to improve these mechanisms?” From the expansion ring of Sabiduría Universal, the middle of three rings, where the work stops to reflect on how we arrived at the present. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
           "framed": "yes",
           "size": "A2 (42.0 x 59.4 cm)",
@@ -2097,6 +2201,96 @@
         "url": "https://www.etsy.com/listing/4612486602/sabiduria-pasajera-passing-wisdom1794138338"
       },
       "id": "4612486602",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-08",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Collection": "Sabiduría Universal"
+        },
+        "fields": {
+          "description": "From the expansion ring of Sabiduría Universal, the middle of three rings, where the work stops to reflect on how we arrived at the present. This hand drawn original was created in London, UK in 2023, as part of Sabiduría Universal, a collaboration between Maryland Supreme and Sebastian Andia.",
+          "framed": "yes",
+          "size": "A2 (42.0 x 59.4 cm)",
+          "title": "Lluvia intergaláctica, conexiones remotas",
+          "type": "hand drawn original"
+        },
+        "image_source": "file",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/e8c1e7/8866459657/il_{size}.8866459657_ncfq.jpg",
+            "height": 1164,
+            "src": "https://i.etsystatic.com/59829812/r/il/e8c1e7/8866459657/il_fullxfull.8866459657_ncfq.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/3b86c6/8866459659/il_{size}.8866459659_5ee5.jpg",
+            "height": 1059,
+            "src": "https://i.etsystatic.com/59829812/r/il/3b86c6/8866459659/il_fullxfull.8866459659_5ee5.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/82bda2/8818647184/il_{size}.8818647184_sh1b.jpg",
+            "height": 794,
+            "src": "https://i.etsystatic.com/59829812/r/il/82bda2/8818647184/il_fullxfull.8818647184_sh1b.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/d4c5c4/8818647192/il_{size}.8818647192_b7up.jpg",
+            "height": 1059,
+            "src": "https://i.etsystatic.com/59829812/r/il/d4c5c4/8818647192/il_fullxfull.8818647192_b7up.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/b9cf35/8866459655/il_{size}.8866459655_fur4.jpg",
+            "height": 1059,
+            "src": "https://i.etsystatic.com/59829812/r/il/b9cf35/8866459655/il_fullxfull.8866459655_fur4.jpg",
+            "width": 794
+          },
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/32213b/8866459669/il_{size}.8866459669_nm91.jpg",
+            "height": 595,
+            "src": "https://i.etsystatic.com/59829812/r/il/32213b/8866459669/il_fullxfull.8866459669_nm91.jpg",
+            "width": 794
+          }
+        ],
+        "listing_id": "4612488662",
+        "price": {
+          "amount": "500.00",
+          "currency": "GBP",
+          "raw": "500.00 GBP"
+        },
+        "pub_date": "2026-11-08",
+        "slug": "lluvia-intergalactica-intergalactic-rain1794138757",
+        "title": "Lluvia Intergaláctica / Intergalactic Rain, Remote Connections (framed, original, A2)",
+        "url": "https://www.etsy.com/listing/4612488662/lluvia-intergalactica-intergalactic-rain1794138757"
+      },
+      "id": "4612488662",
       "source": "etsy",
       "sync": {
         "available": true,
