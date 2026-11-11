@@ -16,6 +16,527 @@
         "year": null
       },
       "etsy": {
+        "body": "This booklet covers the works of Maryland Supreme between 2013 and 2023. A wide range of styles and characters are discovered as part of a natural artistic exploration to find shapes and colors that work together.",
+        "extra_fields": {},
+        "fields": {},
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/6fd9c1/6935638895/il_{size}.6935638895_2ehn.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/6fd9c1/6935638895/il_570xN.6935638895_2ehn.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4310481481",
+        "price": {
+          "amount": "30.00",
+          "currency": "GBP",
+          "raw": "30.00 GBP"
+        },
+        "pub_date": "2026-11-10",
+        "slug": "maryland-supreme-10th-year-anniversary1794313857",
+        "title": "Maryland Supreme 10th Year Anniversary Catalog 2023 (book , art, drawings)",
+        "url": "https://www.etsy.com/listing/4310481481/maryland-supreme-10th-year-anniversary1794313857"
+      },
+      "id": "4310481481",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-11",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": "Sabiduría Universal (Universal Understandings), covers the work for Maryland Supreme and Sebastian Andia between 2023-2024. The artwork covered in this printed booklet was produced as a collaboration mixing both styles over more than 40 original drawings.",
+        "extra_fields": {},
+        "fields": {},
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/a30170/6887718544/il_{size}.6887718544_fiuq.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/a30170/6887718544/il_570xN.6887718544_fiuq.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4310491937",
+        "price": {
+          "amount": "30.00",
+          "currency": "GBP",
+          "raw": "30.00 GBP"
+        },
+        "pub_date": "2026-11-10",
+        "slug": "sabiduria-universal-2024-book-art1794313853",
+        "title": "Sabiduria Universal - 2024 (book , art, drawings)",
+        "url": "https://www.etsy.com/listing/4310491937/sabiduria-universal-2024-book-art1794313853"
+      },
+      "id": "4310491937",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-11",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Set": "2/6 variable set"
+        },
+        "fields": {
+          "description": "“Deep understanding of the universe requires us to explore the boundaries.“. The CORE series was produced in London at PigmentPress in March 2025. This limited series consists of two-color screen prints with hand drawn backgrounds.",
+          "framed": "Recycled Frame",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "CORE",
+          "type": "Screen Printed with hand drawn background"
+        },
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/588a48/7064153883/il_{size}.7064153883_13zn.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/588a48/7064153883/il_570xN.7064153883_13zn.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4334705118",
+        "price": {
+          "amount": "85.00",
+          "currency": "GBP",
+          "raw": "85.00 GBP"
+        },
+        "pub_date": "2026-11-10",
+        "slug": "core-26-framed-original-screen-print1794313853",
+        "title": "Core 2/6 ( framed, original, screen print + hand drawn )",
+        "url": "https://www.etsy.com/listing/4334705118/core-26-framed-original-screen-print1794313853"
+      },
+      "id": "4334705118",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-11",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Frame": "Recycled Frame"
+        },
+        "fields": {
+          "description": "“Exploring outer space provides insights that can affect your daily life. Supporting science allows the human race to experience the feeling of progress.” This hand drawn illustration was created in Tenerife, Spain in 2025, inspired by the sand grain sizes, which typically range from 0.0625 mm to 2 mm in diameter, according to the Wentworth scale.",
+          "size": "18 x 26 cm",
+          "title": "OUT",
+          "type": "hand drawn - original"
+        },
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/e09790/7064456089/il_{size}.7064456089_a37q.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/e09790/7064456089/il_570xN.7064456089_a37q.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4334766371",
+        "price": {
+          "amount": "50.00",
+          "currency": "GBP",
+          "raw": "50.00 GBP"
+        },
+        "pub_date": "2026-11-10",
+        "slug": "out-framed-original-hand-drawn1794313853",
+        "title": "OUT ( framed, original, hand drawn )",
+        "url": "https://www.etsy.com/listing/4334766371/out-framed-original-hand-drawn1794313853"
+      },
+      "id": "4334766371",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-11",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {},
+        "fields": {
+          "description": "“Connections between entities in our universe seem chaotic and random. Finding the missing links drives us closer to others and nature.” This hand drawn original was inspired by the reflections of entities passing by on a busy street against a coffee shop glass.",
+          "framed": "Recycled Frame",
+          "size": "A4 (29.7 x 42.0 cm)",
+          "title": "Chaos",
+          "type": "Hand Drawn (original"
+        },
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/9bd1ec/7016490162/il_{size}.7016490162_bd91.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/9bd1ec/7016490162/il_570xN.7016490162_bd91.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4334767793",
+        "price": {
+          "amount": "75.00",
+          "currency": "GBP",
+          "raw": "75.00 GBP"
+        },
+        "pub_date": "2026-11-10",
+        "slug": "chaos-framed-original-hand-drawn1794313853",
+        "title": "Chaos ( framed, original, hand drawn )",
+        "url": "https://www.etsy.com/listing/4334767793/chaos-framed-original-hand-drawn1794313853"
+      },
+      "id": "4334767793",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-11",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {},
+        "fields": {
+          "description": "The weekend is over and you need to start fixing your life. Time to get your stuff in order and check more items from your infinite TODO list.",
+          "framed": "Recycled Frame",
+          "size": "A3 (29.7 x 42.0 cm)",
+          "title": "FIX",
+          "type": "hand drawn original"
+        },
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/89e773/7137317042/il_{size}.7137317042_5a01.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/89e773/7137317042/il_570xN.7137317042_5a01.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4357575533",
+        "price": {
+          "amount": "100.00",
+          "currency": "GBP",
+          "raw": "100.00 GBP"
+        },
+        "pub_date": "2026-11-10",
+        "slug": "fix-framed-original-hand-drawn1794313862",
+        "title": "FIX ( framed, original, hand drawn )",
+        "url": "https://www.etsy.com/listing/4357575533/fix-framed-original-hand-drawn1794313862"
+      },
+      "id": "4357575533",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-11",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {},
+        "fields": {
+          "description": "Contradiction is part of nature, contrast is built-in in the universe. Which side are you on? What shapes can you recognise?",
+          "size": "A3 (29.7 x 42.0 cm)\nFramed",
+          "title": "Opposing forces",
+          "type": "hand drawn original"
+        },
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/453ea0/7206693499/il_{size}.7206693499_pxrs.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/453ea0/7206693499/il_570xN.7206693499_pxrs.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4361584092",
+        "price": {
+          "amount": "100.00",
+          "currency": "GBP",
+          "raw": "100.00 GBP"
+        },
+        "pub_date": "2026-11-10",
+        "slug": "opposing-forces-framed-original-hand1794313862",
+        "title": "Opposing Forces ( framed, original, hand drawn )",
+        "url": "https://www.etsy.com/listing/4361584092/opposing-forces-framed-original-hand1794313862"
+      },
+      "id": "4361584092",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-11",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Frame": "Recycled Frame"
+        },
+        "fields": {
+          "description": "“When path are crossed, all experiences can go wrong. But  in the hypothetical case they aren't, you can enjoy what's left of the journey.” This hand drawn illustration was created in Tenerife, Spain in 2025, inspired by the past of time and people on the sunny beaches of the atlantic.",
+          "size": "18 x 26 cm",
+          "title": "IHE (Inter hypothetical experience)",
+          "type": "hand drawn - original"
+        },
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/6f0e59/7226195833/il_{size}.7226195833_75cn.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/6f0e59/7226195833/il_570xN.7226195833_75cn.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4365302366",
+        "price": {
+          "amount": "100.00",
+          "currency": "GBP",
+          "raw": "100.00 GBP"
+        },
+        "pub_date": "2026-11-10",
+        "slug": "ihe-framed-original-hand-drawn1794313859",
+        "title": "IHE ( framed, original, hand drawn )",
+        "url": "https://www.etsy.com/listing/4365302366/ihe-framed-original-hand-drawn1794313859"
+      },
+      "id": "4365302366",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-11",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {
+          "Frame": "Recycled Frame"
+        },
+        "fields": {
+          "description": "“Background noise can inspire you to create something different. Keep. your eyes open for hints and clues hidden in obvious places.” This hand drawn illustration was created in London, UK in 2025, inspired by huge crowds of people passing by a very slow traffic light, are they similar, just the same or not equal?.",
+          "size": "105 x 77 cm approx.",
+          "title": "Not Equal",
+          "type": "hand drawn - original"
+        },
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/71f703/7266753155/il_{size}.7266753155_32ip.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/71f703/7266753155/il_570xN.7266753155_32ip.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4373673195",
+        "price": {
+          "amount": "250.00",
+          "currency": "GBP",
+          "raw": "250.00 GBP"
+        },
+        "pub_date": "2026-11-10",
+        "slug": "not-equal-framed-original-drawing1794313857",
+        "title": "Not Equal (framed, original, drawing)",
+        "url": "https://www.etsy.com/listing/4373673195/not-equal-framed-original-drawing1794313857"
+      },
+      "id": "4373673195",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-11",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
+        "body": null,
+        "extra_fields": {},
+        "fields": {
+          "description": "“Man-made machines needs to keep the order and balance between what is created and what organically grow by the laws of nature.” As part of texture and layout exploration this piece highlights the proportion between machinery and organic matter to keep a balance of 3.4/8 ratio. This hand drawn original was created in London, UK in 2025.",
+          "size": "18 x 13 cm\nFramed",
+          "title": "Microcosm!+",
+          "type": "Hand drawn original"
+        },
+        "image_source": "rss",
+        "images": [
+          {
+            "alt": null,
+            "base": "https://i.etsystatic.com/59829812/r/il/f2ddbf/7399360228/il_{size}.7399360228_qenj.jpg",
+            "height": 429,
+            "src": "https://i.etsystatic.com/59829812/r/il/f2ddbf/7399360228/il_570xN.7399360228_qenj.jpg",
+            "width": 570
+          }
+        ],
+        "listing_id": "4405352326",
+        "price": {
+          "amount": "25.00",
+          "currency": "GBP",
+          "raw": "25.00 GBP"
+        },
+        "pub_date": "2026-11-10",
+        "slug": "microcosm-framed-original-hand-drawn1794313852",
+        "title": "Microcosm!+ ( framed, original, hand drawn )",
+        "url": "https://www.etsy.com/listing/4405352326/microcosm-framed-original-hand-drawn1794313852"
+      },
+      "id": "4405352326",
+      "source": "etsy",
+      "sync": {
+        "available": true,
+        "delisted_at": null,
+        "first_seen": "2026-11-11",
+        "relisted_at": null
+      }
+    },
+    {
+      "curation": {
+        "alt": null,
+        "featured": false,
+        "hidden": false,
+        "image_override": null,
+        "notes": "",
+        "order": null,
+        "status_override": null,
+        "tags": [],
+        "title_override": null,
+        "year": null
+      },
+      "etsy": {
         "body": null,
         "extra_fields": {},
         "fields": {
@@ -1912,8 +2433,8 @@
       "id": "4610011161",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-11",
         "first_seen": "2026-11-04",
         "relisted_at": null
       }
@@ -2002,8 +2523,8 @@
       "id": "4612471543",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-11",
         "first_seen": "2026-11-08",
         "relisted_at": null
       }
@@ -2106,8 +2627,8 @@
       "id": "4612473769",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-11",
         "first_seen": "2026-11-08",
         "relisted_at": null
       }
@@ -2196,8 +2717,8 @@
       "id": "4612475343",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-11",
         "first_seen": "2026-11-08",
         "relisted_at": null
       }
@@ -2286,8 +2807,8 @@
       "id": "4612476985",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-11",
         "first_seen": "2026-11-08",
         "relisted_at": null
       }
@@ -2383,8 +2904,8 @@
       "id": "4612486602",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-11",
         "first_seen": "2026-11-08",
         "relisted_at": null
       }
@@ -2473,8 +2994,8 @@
       "id": "4612488662",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-11",
         "first_seen": "2026-11-08",
         "relisted_at": null
       }
@@ -2563,8 +3084,8 @@
       "id": "4612492104",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-11",
         "first_seen": "2026-11-08",
         "relisted_at": null
       }
@@ -2653,8 +3174,8 @@
       "id": "4612493722",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-11",
         "first_seen": "2026-11-08",
         "relisted_at": null
       }
@@ -2743,8 +3264,8 @@
       "id": "4612495522",
       "source": "etsy",
       "sync": {
-        "available": true,
-        "delisted_at": null,
+        "available": false,
+        "delisted_at": "2026-11-11",
         "first_seen": "2026-11-09",
         "relisted_at": null
       }
