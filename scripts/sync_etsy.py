@@ -4,14 +4,21 @@
 The feed is the only reachable source of shop data — Etsy's shop and listing
 HTML pages sit behind DataDome (403) and the v3 API needs a key.
 
-This is an UPSERT, never a mirror. A work that disappears from the feed has
-sold; it is marked unavailable and keeps its stored data, page, and URL.
+This is an UPSERT, never a mirror, and it is ADDITIVE by default: the RSS feed
+returns a rolling window of ~10 listings rather than the shop inventory, so a
+work missing from it has not necessarily sold. Absence is reported, never
+acted on. Sales are recorded by hand with `curation.status_override = "sold"`.
+
+Pass --complete-inventory only when the source really does list every active
+listing. Even then the run is capped by --max-sold, so a truncated or partial
+response fails loudly instead of emptying the shop.
 
 Exit codes:
     0  success (including "nothing changed")
     1  network / HTTP / parse failure
     2  write failure, or an unreadable existing works.json
     3  refused: feed was empty but the database is not (see --allow-empty)
+    4  refused: --complete-inventory would mark more works sold than --max-sold
 """
 
 import argparse
@@ -90,10 +97,33 @@ def describe(summary, warnings):
         if summary[key]:
             parts.append("%d %s (%s)" % (len(summary[key]), label, ", ".join(summary[key])))
     lines = ["Etsy sync: " + ("; ".join(parts) if parts else "no changes")]
+    if summary.get("absent"):
+        lines.append(
+            "%d work(s) not in this feed window, left untouched: %s"
+            % (len(summary["absent"]), ", ".join(summary["absent"]))
+        )
     if summary.get("archived"):
         lines.append("archived %d image(s): %s" % (len(summary["archived"]), ", ".join(summary["archived"])))
     lines += ["warning: " + w for w in warnings]
     return "\n".join(lines)
+
+
+def describe_duplicates(dupes):
+    """One artwork under several listing ids — reported, never auto-merged."""
+    if not dupes:
+        return ""
+    lines = ["", "note: %d artwork(s) stored under more than one listing id." % len(dupes)]
+    for key, works in dupes.items():
+        ids = []
+        for w in works:
+            state = "available" if (w.get("sync") or {}).get("available") else "sold"
+            price = ((w.get("etsy") or {}).get("price") or {}).get("raw") or "?"
+            ids.append("%s (%s, %s)" % (w["id"], state, price))
+        lines.append("      %s: %s" % (key, "; ".join(ids)))
+    lines.append("      Pick one and set curation.hidden on the other — they may")
+    lines.append("      disagree on price, so this is not merged automatically.")
+    return "\n".join(lines)
+
 
 
 def bump_heartbeat(now):
@@ -188,7 +218,23 @@ def main(argv=None):
     ap.add_argument(
         "--allow-empty",
         action="store_true",
-        help="permit an empty feed to mark every work sold (see exit code 3)",
+        help="proceed even though the feed returned nothing (see exit code 3)",
+    )
+    ap.add_argument(
+        "--complete-inventory",
+        action="store_true",
+        help="assert the source lists EVERY active listing, so absence means a "
+             "sale. Off by default: the shop RSS feed is a ~10-item window and "
+             "absence from it proves nothing. Still capped by --max-sold.",
+    )
+    ap.add_argument(
+        "--max-sold",
+        type=int,
+        default=3,
+        help="refuse a --complete-inventory run that would mark more than this "
+             "many works sold at once (default 3). A real shop does not sell "
+             "its catalogue overnight; a truncated response looks exactly like "
+             "it does. Raise it deliberately for a genuine clear-out.",
     )
     ap.add_argument("--check", action="store_true", help="verify curation blocks survived the write")
     ap.add_argument(
@@ -252,17 +298,36 @@ def main(argv=None):
     if not items and existing_etsy and not args.allow_empty:
         sys.stderr.write(
             "error: feed returned 0 listings but %d Etsy works are on record.\n"
-            "Refusing to mark the whole shop sold. If the shop really is empty,\n"
-            "re-run with --allow-empty.\n" % len(existing_etsy)
+            "Nothing would be marked sold (absence is not a sale here), but an\n"
+            "empty feed almost always means a bot challenge or a renamed shop,\n"
+            "so this run is refused rather than recorded as a no-op.\n"
+            "Re-run with --allow-empty if the shop really is empty.\n" % len(existing_etsy)
         )
         return 3
 
-    new_db, summary = m.merge(db, items)
+
+    new_db, summary = m.merge(db, items, complete=args.complete_inventory)
+
+    # The breaker is the last line of defence behind --complete-inventory: if
+    # the "complete" response was in fact truncated, this is what stops the
+    # whole shop going sold out. Refuse the entire run rather than write a
+    # partial one — a sync that does nothing is always recoverable.
+    if summary["sold"] and len(summary["sold"]) > args.max_sold:
+        sys.stderr.write(
+            "error: this run would mark %d works sold, over the --max-sold limit "
+            "of %d.\nRefusing: a source that drops this much at once is far more "
+            "likely truncated than\nsold out. Inspect it with --dry-run, then raise "
+            "--max-sold if the sales are real.\nWorks: %s\n"
+            % (len(summary["sold"]), args.max_sold, ", ".join(summary["sold"]))
+        )
+        return 4
+
     if args.archive_images and not args.dry_run:
         # Must run before serialising so the stored path is part of this write.
         summary["archived"] = archive_images(new_db, set(summary["sold"]), args.verbose)
     after_text = m.dumps(new_db)
-    report = describe(summary, warnings)
+    report = describe(summary, warnings) + describe_duplicates(m.duplicate_listings(new_db))
+
 
     if args.dry_run:
         diff = difflib.unified_diff(

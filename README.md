@@ -269,9 +269,21 @@ no tracking code is emitted at all.
 
 ## When something sells
 
-Nothing to do. Etsy drops sold listings from the feed, the sync notices, and
-the piece moves to the **Sold** section of `/works/` instead of disappearing.
-Its page and URL stay live.
+**Set `status_override` to `"sold"`** on that piece in `data/works.json`. It
+moves to the **Sold** section of `/works/` instead of disappearing, and its page
+and URL stay live.
+
+This is a manual step on purpose. The sync used to infer it — a listing missing
+from the Etsy feed was treated as sold — but the shop RSS feed returns a rolling
+window of only ~10 listings, not the inventory. Every piece past the newest ten
+therefore looked sold: in November 2026 that put 31 of 41 works in the Sold
+section while they were still for sale on Etsy, with the buy button replaced and
+`schema.org/SoldOut` published for each.
+
+So the sync now only ever **adds and updates**. It reports what is missing from
+the feed window and changes nothing, because a windowed feed cannot tell
+"delisted" from "page two". You know when something sells; the feed doesn't.
+
 
 ## Editing a piece by hand
 
@@ -310,7 +322,7 @@ was listed and what sold.
 ## How it fits together
 
 ```
-Etsy RSS ─────────┐   (listings, prices, sold status — automatic)
+Etsy RSS ─────────┐   (listings + prices only — never sold status)
                   ├─▶ sync_etsy.py ──▶ data/works.json ──▶ build.py ──▶ _site/ ──▶ Pages
 data/images/*.json┘      (upsert)     (source of truth)   (templates/)
  (photos, captured
@@ -320,7 +332,7 @@ data/images/*.json┘      (upsert)     (source of truth)   (templates/)
 | File | Role |
 |---|---|
 | `scripts/msuplib.py` | Feed parsing, API images, merge rules, srcset. All the logic worth testing. |
-| `scripts/sync_etsy.py` | Etsy → `works.json`. Never deletes. |
+| `scripts/sync_etsy.py` | Etsy → `works.json`. Adds and updates only; never deletes, never marks sold. |
 | `scripts/build.py` | `works.json` + `templates/` → `_site/`. |
 | `tools/grab-photos.js` | The bookmarklet source, compiled into `/tools/` at build time. |
 | `data/images/` | Captured galleries, one file per listing. Yours to edit. Applied by both the sync and the build, so committing one is enough. |
@@ -338,10 +350,18 @@ A few decisions that look odd until you know the reason:
 - **No server-side scraping.** Even if a bypass worked today, the sync runs on
   GitHub Actions datacenter IPs — the most heavily scrutinised kind — so it
   would break silently and leave empty galleries.
+- **The sync never infers a sale from absence** — the single most important
+  rule here. The shop RSS feed is a ~10-item window, so "not in the feed" means
+  almost nothing. Marking those sold emptied the shop front once already. A
+  source that genuinely lists every active listing can opt in with
+  `--complete-inventory`, and even that is capped by `--max-sold` (default 3):
+  a run that would sell off more than that is refused outright, because a
+  truncated response looks exactly like a sold-out shop.
 - **The sync refuses to write when the feed comes back empty** (exit code 3).
-  A bot challenge or a shop rename would otherwise mark every piece sold in one
-  unattended overnight run. Override with `--allow-empty` if the shop really is
-  empty.
+  Nothing would be marked sold now, but an empty feed still means a bot
+  challenge or a renamed shop, so it fails loudly instead of passing as a quiet
+  no-op. Override with `--allow-empty` if the shop really is empty.
+
 - **Images are hotlinked from Etsy**, not copied into the repo. Cheap and
   simple, with the caveat below.
 - **The gallery uses no JavaScript.** Photo selection is a hidden radio per
@@ -367,12 +387,13 @@ A few decisions that look odd until you know the reason:
   upcoming or past is the one thing on this site that changes with nobody
   editing a file. Making it an argument keeps the rendered site a pure function
   of its inputs, so the rollover is covered by a test instead of by waiting for
-  November. The daily Etsy sync is what rebuilds and publishes it.
+  November. A daily rebuild in `deploy.yml` is what publishes it.
 
 ### Known limitations
 
-- **Photos need a manual capture per artwork.** See above. Everything else
-  (new listings, prices, sold status) is fully automatic.
+- **Photos need a manual capture per artwork.** See above. New listings and
+  price changes are automatic; **sold status is not** — see "When something
+  sells".
 - **Hotlinked images depend on Etsy.** Photos of sold or deactivated listings
   usually keep serving for years; photos of *deleted* listings eventually 404,
   and a broken image falls back to a placeholder. For a guaranteed archive, run

@@ -17,6 +17,14 @@ on:
       - "data/**"
       - ".github/workflows/deploy.yml"
   workflow_dispatch:
+  schedule:
+    # Daily rebuild, 05:43 UTC. "Today" is passed into the build, so whether a
+    # show is upcoming or past changes with nobody editing a file — something
+    # has to rebuild for that rollover to reach the site. The Etsy sync used to
+    # provide it incidentally; its schedule is disabled (see
+    # sync-and-publish.yml), so the rebuild lives here now, where it touches no
+    # data and can never mark anything sold.
+    - cron: "43 5 * * *"
 
 permissions:
   contents: read

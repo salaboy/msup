@@ -47,6 +47,25 @@ def feed_with(description, title="THING by MSupShop", guid="https://www.etsy.com
     ).encode()
 
 
+def feed_with_items(count, start=9000000000):
+    """A feed of `count` listings with predictable ids, for window tests.
+
+    Ids ascend from `start`, so feed_with_items(2) is feed_with_items(3) minus
+    its last listing — which is what a shrinking window looks like.
+    """
+    items = "".join(
+        '<item><title>Piece %d by MSupShop</title>'
+        '<description>&lt;p class="price"&gt;25.00 GBP&lt;/p&gt;</description>'
+        "<guid>https://www.etsy.com/uk/listing/%d/piece-%d</guid></item>"
+        % (i, start + i, i)
+        for i in range(count)
+    )
+    return (
+        '<?xml version="1.0"?><rss version="2.0"><channel>'
+        "<title>Etsy Shop for MSupShop</title>%s</channel></rss>" % items
+    ).encode()
+
+
 class TestParse(unittest.TestCase):
     def test_fix_listing(self):
         items, warnings = m.parse_feed(FIX_FEED)
@@ -151,7 +170,7 @@ class TestMerge(unittest.TestCase):
 
     def test_delisted_work_marked_sold_not_deleted(self):
         db, _ = m.merge(m.empty_db(), self.items, now="2026-08-31")
-        db, summary = m.merge(db, [], now="2026-09-10")
+        db, summary = m.merge(db, [], now="2026-09-10", complete=True)
         self.assertEqual(summary["sold"], ["4565863595"])
         self.assertEqual(len(db["works"]), 1, "the work must survive delisting")
         self.assertFalse(db["works"][0]["sync"]["available"])
@@ -160,13 +179,48 @@ class TestMerge(unittest.TestCase):
         self.assertEqual(db["works"][0]["etsy"]["title"], "FIX")
         self.assertTrue(db["works"][0]["etsy"]["images"][0]["src"])
 
+    def test_absence_alone_never_marks_sold(self):
+        """The regression that marked 31 of 41 works sold out in Nov 2026.
+
+        The shop RSS feed is a ~10-item window, so a work falling out of it is
+        the normal case, not a sale. Without `complete` the sync must leave it
+        exactly as it was and only report it.
+        """
+        db, _ = m.merge(m.empty_db(), self.items, now="2026-08-31")
+        before = json.dumps(db["works"][0], sort_keys=True)
+        db, summary = m.merge(db, [], now="2026-09-10")
+
+        self.assertEqual(summary["sold"], [])
+        self.assertEqual(summary["absent"], ["4565863595"])
+        self.assertTrue(db["works"][0]["sync"]["available"])
+        self.assertIsNone(db["works"][0]["sync"]["delisted_at"])
+        self.assertEqual(json.dumps(db["works"][0], sort_keys=True), before)
+
+    def test_repeated_windowed_syncs_do_not_erode_the_catalogue(self):
+        """Ten syncs that each show a different single listing must not sell nine."""
+        feed = [dict(self.items[0], listing_id=str(9000000000 + i)) for i in range(10)]
+        db = m.empty_db()
+        for day, item in enumerate(feed, start=1):   # each "window" holds one listing
+            db, _ = m.merge(db, [item], now="2026-09-%02d" % day)
+        self.assertEqual(len(db["works"]), 10)
+        self.assertTrue(all(w["sync"]["available"] for w in db["works"]),
+                        "a windowed feed must never erode availability")
+
+    def test_already_sold_work_is_not_reported_absent(self):
+        db, _ = m.merge(m.empty_db(), self.items, now="2026-08-31")
+        db, _ = m.merge(db, [], now="2026-09-10", complete=True)
+        db, summary = m.merge(db, [], now="2026-09-11")
+        self.assertEqual(summary["absent"], [], "already sold, nothing to report")
+        self.assertEqual(summary["sold"], [])
+
     def test_relist_clears_sold_state(self):
         db, _ = m.merge(m.empty_db(), self.items, now="2026-08-31")
-        db, _ = m.merge(db, [], now="2026-09-10")
+        db, _ = m.merge(db, [], now="2026-09-10", complete=True)
         db, summary = m.merge(db, self.items, now="2026-09-20")
         self.assertEqual(summary["relisted"], ["4565863595"])
         self.assertTrue(db["works"][0]["sync"]["available"])
         self.assertIsNone(db["works"][0]["sync"]["delisted_at"])
+
 
     def test_curation_survives_every_transition(self):
         """The artist's manual edits must never be clobbered by a sync."""
@@ -468,6 +522,53 @@ class TestAnalytics(unittest.TestCase):
                 self.snippet(bad)
 
 
+class TestDuplicateListings(unittest.TestCase):
+    """One artwork under two listing ids — reported, never auto-merged."""
+
+    def db_with(self, *titles):
+        db = m.empty_db()
+        for i, title in enumerate(titles):
+            db["works"].append({
+                "id": str(9000000000 + i), "source": "etsy",
+                "etsy": {"title": title, "price": {"raw": "25.00 GBP"}},
+                "sync": {"available": True, "delisted_at": None,
+                         "relisted_at": None, "first_seen": "2026-01-01"},
+                "curation": dict(m.CURATION_DEFAULTS),
+            })
+        return db
+
+    def test_relisted_piece_under_two_ids_is_detected(self):
+        db = self.db_with("Not Equal (framed, original, drawing)",
+                          "Not Equal (framed, original, drawing) by MSupShop")
+        dupes = m.duplicate_listings(db)
+        self.assertEqual(list(dupes), ["not-equal"])
+        self.assertEqual(len(dupes["not-equal"]), 2)
+
+    def test_accents_and_translation_half_do_not_split_a_pair(self):
+        db = self.db_with("Sabiduría Universal - 2024 (book)",
+                          "Sabiduria Universal - 2024 (book, art)")
+        self.assertEqual(list(m.duplicate_listings(db)), ["sabiduria-universal-2024"])
+
+    def test_distinct_titles_are_not_grouped(self):
+        db = self.db_with("Microcosm!+ (framed)", "Exodus (framed)")
+        self.assertEqual(m.duplicate_listings(db), {})
+
+    def test_untitled_works_are_ignored_not_grouped_together(self):
+        db = self.db_with("", "")
+        self.assertEqual(m.duplicate_listings(db), {})
+
+    def test_report_names_ids_states_and_prices(self):
+        import sync_etsy
+        db = self.db_with("Not Equal (drawing)", "Not Equal (drawing) by MSupShop")
+        db["works"][1]["sync"]["available"] = False
+        text = sync_etsy.describe_duplicates(m.duplicate_listings(db))
+        self.assertIn("9000000000", text)
+        self.assertIn("9000000001", text)
+        self.assertIn("available", text)
+        self.assertIn("sold", text)
+        self.assertIn("curation.hidden", text)
+
+
 class TestSyncScript(unittest.TestCase):
     """End-to-end via the CLI, using a local fixture instead of the network."""
 
@@ -487,24 +588,76 @@ class TestSyncScript(unittest.TestCase):
             os.unlink(feed)
 
     def test_empty_feed_is_refused_with_exit_3(self):
-        """A bot challenge or shop rename must not silently sell out the shop."""
+        """A bot challenge or shop rename must not pass as a quiet no-op."""
         with tempfile.TemporaryDirectory() as d:
             out = os.path.join(d, "works.json")
             self.assertEqual(self.run_sync(FIX_FEED, out).returncode, 0)
             result = self.run_sync(EMPTY_FEED, out)
             self.assertEqual(result.returncode, 3)
-            self.assertIn("Refusing", result.stderr)
+            self.assertIn("refused", result.stderr)
             # and the file is untouched
             with open(out, encoding="utf-8") as fh:
                 self.assertTrue(json.load(fh)["works"][0]["sync"]["available"])
 
-    def test_allow_empty_marks_sold(self):
+    def test_allow_empty_alone_still_does_not_mark_sold(self):
+        """--allow-empty waives the empty-feed guard, not the absence rule."""
         with tempfile.TemporaryDirectory() as d:
             out = os.path.join(d, "works.json")
             self.run_sync(FIX_FEED, out)
             self.assertEqual(self.run_sync(EMPTY_FEED, out, "--allow-empty").returncode, 0)
             with open(out, encoding="utf-8") as fh:
+                self.assertTrue(json.load(fh)["works"][0]["sync"]["available"])
+
+    def test_complete_inventory_marks_sold(self):
+        """Absence is a sale only when the caller vouches for the source."""
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "works.json")
+            self.run_sync(FIX_FEED, out)
+            result = self.run_sync(EMPTY_FEED, out, "--allow-empty", "--complete-inventory")
+            self.assertEqual(result.returncode, 0)
+            with open(out, encoding="utf-8") as fh:
                 self.assertFalse(json.load(fh)["works"][0]["sync"]["available"])
+
+    def test_breaker_refuses_a_mass_sell_off_and_writes_nothing(self):
+        """A truncated 'complete' response must fail loudly, not empty the shop."""
+        feed = feed_with_items(6)
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "works.json")
+            self.assertEqual(self.run_sync(feed, out).returncode, 0)
+            with open(out, encoding="utf-8") as fh:
+                before = fh.read()
+
+            result = self.run_sync(EMPTY_FEED, out, "--allow-empty",
+                                   "--complete-inventory", "--max-sold", "3")
+            self.assertEqual(result.returncode, 4)
+            self.assertIn("--max-sold", result.stderr)
+            with open(out, encoding="utf-8") as fh:
+                self.assertEqual(fh.read(), before,
+                                 "a refused run must write nothing at all")
+
+    def test_breaker_allows_a_sale_under_the_limit(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "works.json")
+            self.run_sync(feed_with_items(3), out)
+            result = self.run_sync(feed_with_items(2), out, "--complete-inventory",
+                                   "--max-sold", "3")
+            self.assertEqual(result.returncode, 0)
+            with open(out, encoding="utf-8") as fh:
+                works = {w["id"]: w for w in json.load(fh)["works"]}
+            self.assertFalse(works["9000000002"]["sync"]["available"])
+            self.assertTrue(works["9000000000"]["sync"]["available"])
+
+    def test_windowed_feed_reports_absent_without_touching_anything(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "works.json")
+            self.run_sync(feed_with_items(3), out)
+            result = self.run_sync(feed_with_items(1), out)
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("not in this feed window", result.stdout)
+            with open(out, encoding="utf-8") as fh:
+                works = json.load(fh)["works"]
+            self.assertTrue(all(w["sync"]["available"] for w in works))
+
 
     def test_non_rss_response_is_fatal(self):
         """A DataDome interstitial returns HTTP 200 with HTML."""

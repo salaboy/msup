@@ -507,20 +507,36 @@ def empty_db(feed=DEFAULT_FEED):
     return {"schema_version": SCHEMA_VERSION, "source_feed": feed, "works": []}
 
 
-def merge(db, feed_items, now=None):
+def merge(db, feed_items, now=None, complete=False):
     """Upsert feed items into the works database.
 
     The ownership boundary is structural, not per-field: `etsy` and `sync` are
     machine-owned, `curation` is human-owned and copied through untouched.
-    Nothing is ever deleted — a work that leaves the feed has sold, and keeps
-    its page, its frozen last-known-good `etsy` data, and its URL.
+    Nothing is ever deleted.
+
+    `complete` is the caller's assertion that `feed_items` is the shop's ENTIRE
+    active inventory. Only then does absence mean a sale.
+
+    It defaults to False because the Etsy shop RSS feed — the only source this
+    repo has without an API key — returns a rolling window of ~10 listings, not
+    the inventory. Treating that absence as a sale marked 31 of 41 works sold
+    out on the live site in November 2026 while they were still for sale; see
+    the comment in .github/workflows/sync-and-publish.yml. A truncated feed is
+    indistinguishable from a shrinking one, so the only safe default is to
+    never infer a sale from it.
+
+    With `complete=False` a work missing from the feed keeps whatever state it
+    already had, and its id is reported in `summary["absent"]`. Sales are then
+    recorded by hand via `curation.status_override = "sold"`, which `view()`
+    honours over anything the sync writes.
 
     Returns (new_db, summary).
     """
     now = now or today()
     by_id = {w["id"]: w for w in db.get("works", [])}
     seen = set()
-    summary = {"new": [], "sold": [], "relisted": [], "changed": [], "manual": []}
+    summary = {"new": [], "sold": [], "relisted": [], "changed": [],
+               "manual": [], "absent": []}
 
     for item in feed_items:
         wid = item["listing_id"]
@@ -565,16 +581,47 @@ def merge(db, feed_items, now=None):
         if wid in seen or work.get("source") != "etsy":
             continue
         sync = work.setdefault("sync", {})
-        if sync.get("available", True):
-            sync["available"] = False
-            sync["delisted_at"] = sync.get("delisted_at") or now
-            summary["sold"].append(wid)
+        if not sync.get("available", True):
+            continue
+        if not complete:
+            # Absence proves nothing about a windowed feed. Leave the work
+            # exactly as it is and let the caller report it.
+            summary["absent"].append(wid)
+            continue
+        sync["available"] = False
+        sync["delisted_at"] = sync.get("delisted_at") or now
+        summary["sold"].append(wid)
 
+    summary["absent"].sort()
     out = dict(db)
     out["schema_version"] = SCHEMA_VERSION
     out.setdefault("source_feed", DEFAULT_FEED)
     out["works"] = [by_id[k] for k in sorted(by_id)]
     return out, summary
+
+
+def duplicate_listings(db):
+    """Group works whose titles match, i.e. one piece under several listing ids.
+
+    Etsy mints a new listing id when a piece is relisted, so the same artwork
+    can end up stored twice — once live, once frozen as "sold". This only
+    reports them. Merging is not automatic on purpose: duplicates routinely
+    disagree on price, so whether two ids are one relisted piece or two real
+    listings is a question only the artist can answer, and guessing wrong
+    deletes a live listing and 404s an indexed page.
+
+    Returns {normalised_title: [work, ...]} for titles held by >1 work.
+    """
+    groups = {}
+    for work in db.get("works", []):
+        title = ((work.get("etsy") or {}).get("title") or "").strip()
+        if not title:
+            continue
+        key = slugify(title.split("(")[0].split("/")[0])
+        if key:
+            groups.setdefault(key, []).append(work)
+    return {k: v for k, v in sorted(groups.items()) if len(v) > 1}
+
 
 
 def dumps(db):
