@@ -22,10 +22,21 @@ on:
         description: "Save a local copy of a piece's photo when it sells"
         type: boolean
         default: false
-  schedule:
-    # 06:17 UTC. Off-the-hour on purpose: scheduled runs at :00 queue behind the
-    # whole platform and get delayed worst.
-    - cron: "17 6 * * *"
+  # SCHEDULE DISABLED 2026-11-11.
+  #
+  # The Etsy shop RSS feed returns only ~10 items — a rolling window, not the
+  # shop inventory. merge() treated "absent from the feed" as "sold", so every
+  # run marked the whole catalogue beyond those 10 as sold: 31 of 41 works were
+  # showing sold out on the live site while still for sale on Etsy.
+  #
+  # Do NOT re-enable until merge() stops inferring sales from feed absence.
+  # Until then the sync is manual (workflow_dispatch) and should be run with
+  # dry_run first.
+  #
+  # schedule:
+  #   # 06:17 UTC. Off-the-hour on purpose: scheduled runs at :00 queue behind the
+  #   # whole platform and get delayed worst.
+  #   - cron: "17 6 * * *"
 
 permissions:
   contents: write   # commit data/works.json
