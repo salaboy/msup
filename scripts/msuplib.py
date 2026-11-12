@@ -108,6 +108,130 @@ def fetch(url, timeout=30, retries=3, sleep=time.sleep, headers=None):
 # --------------------------------------------------------------------------
 
 
+def api_shop_id(shop, api_key, fetcher=None):
+    """Resolve a shop name to its numeric id.
+
+    Etsy's listing endpoints are keyed by shop_id, and the name is all this
+    repo stores. Public endpoint — keystring only, no OAuth.
+    """
+    url = "%s/shops?shop_name=%s" % (ETSY_API, urllib.parse.quote(shop))
+    raw = (fetcher or fetch)(url, headers={"x-api-key": api_key, "Accept": "application/json"})
+    results = (json.loads(raw) or {}).get("results") or []
+    for entry in results:
+        # shop_name match is exact and case-insensitive: a prefix search can
+        # return neighbours, and syncing the wrong shop would be catastrophic.
+        if (entry.get("shop_name") or "").lower() == shop.lower():
+            return str(entry["shop_id"])
+    raise FetchError("no Etsy shop named %r (got %d result(s))" % (shop, len(results)))
+
+
+def api_active_listings(shop_id, api_key, fetcher=None, page_size=100):
+    """EVERY active listing in the shop, following pagination to the end.
+
+    This is the only source here that can honestly answer "is this still for
+    sale?". The RSS feed cannot: it returns a ~10-item window, and absence from
+    it means nothing. See merge(complete=...).
+
+    Pagination is followed to exhaustion and the declared `count` is verified
+    against what actually arrived, because a short read here looks exactly like
+    a sold-out shop to everything downstream.
+    """
+    fetcher = fetcher or fetch
+    headers = {"x-api-key": api_key, "Accept": "application/json"}
+    listings, offset, declared = [], 0, None
+
+    while True:
+        url = ("%s/shops/%s/listings/active?limit=%d&offset=%d&includes=Images"
+               % (ETSY_API, shop_id, page_size, offset))
+        payload = json.loads(fetcher(url, headers=headers)) or {}
+        batch = payload.get("results") or []
+        if declared is None:
+            declared = payload.get("count")
+        listings.extend(batch)
+        if len(batch) < page_size:
+            break
+        offset += page_size
+        if offset > 10000:  # guard against a server that never shortens a page
+            raise FetchError("shop listing pagination did not terminate")
+
+    if declared is not None and len(listings) != declared:
+        raise FetchError(
+            "incomplete inventory: Etsy declared %s active listings but %d arrived. "
+            "Refusing to treat this as the full shop." % (declared, len(listings))
+        )
+    return listings
+
+
+def api_price(price):
+    """Etsy v3 {'amount': 2500, 'divisor': 100, 'currency_code': 'GBP'}."""
+    if not isinstance(price, dict):
+        return parse_price("")
+    amount, divisor = price.get("amount"), price.get("divisor") or 100
+    currency = price.get("currency_code")
+    if amount is None or not currency:
+        return parse_price("")
+    return parse_price("%.2f %s" % (amount / float(divisor), currency))
+
+
+def api_images(listing):
+    """Normalise the `Images` block of an includes=Images listing."""
+    images = []
+    for entry in sorted(listing.get("images") or [], key=lambda r: r.get("rank") or 0):
+        src = entry.get("url_570xN") or entry.get("url_fullxfull")
+        if not src:
+            continue
+        images.append({
+            "src": src,
+            "base": image_base(src),
+            "width": entry.get("full_width"),
+            "height": entry.get("full_height"),
+            "alt": entry.get("alt_text") or None,
+        })
+    return images
+
+
+def api_item(listing):
+    """One v3 listing -> the same dict shape parse_feed() yields.
+
+    Producing an identical shape is the whole point: merge(), the templates and
+    works.json cannot tell which source a record came from, so switching
+    sources never churns the file or needs a schema bump.
+    """
+    listing_id = str(listing.get("listing_id"))
+    title = (listing.get("title") or "").strip()
+    slug = slugify(title.split("(")[0]) or "work"
+    fields, extra, body = parse_description(listing.get("description") or "")
+    return {
+        "listing_id": listing_id,
+        "slug": slug,
+        "url": canonical_listing_url(listing_id, slug),
+        "title": title,
+        "price": api_price(listing.get("price")),
+        "images": api_images(listing),
+        "image_source": "api",
+        "fields": fields,
+        "extra_fields": extra,
+        "body": body,
+        # Deliberately not listing.created_timestamp: pub_date tracks renewal
+        # in the RSS path too, and first_seen is what ordering actually uses.
+        "pub_date": None,
+    }
+
+
+def api_inventory(shop, api_key, fetcher=None):
+    """(items, warnings) for the whole shop, shaped like parse_feed()."""
+    shop_id = api_shop_id(shop, api_key, fetcher)
+    listings = api_active_listings(shop_id, api_key, fetcher)
+    items, warnings = [], []
+    for listing in listings:
+        # `not listing_id` would also drop a legitimate id of 0.
+        if listing.get("listing_id") in (None, ""):
+            warnings.append("skipped a listing with no listing_id")
+            continue
+        items.append(api_item(listing))
+    return items, warnings
+
+
 def api_listing_images(listing_id, api_key, fetcher=None):
     """All images for a listing, via the Etsy v3 API.
 
@@ -553,6 +677,7 @@ def merge(db, feed_items, now=None, complete=False):
                     "delisted_at": None,
                     "relisted_at": None,
                     "available": True,
+                    "on_etsy": True,
                 },
                 "curation": dict(CURATION_DEFAULTS),
             }
@@ -572,6 +697,7 @@ def merge(db, feed_items, now=None, complete=False):
         sync.setdefault("first_seen", now)
         sync["available"] = True
         sync["delisted_at"] = None
+        sync["on_etsy"] = True
         if not was_available:
             sync["relisted_at"] = now
             summary["relisted"].append(wid)
@@ -588,9 +714,15 @@ def merge(db, feed_items, now=None, complete=False):
             # exactly as it is and let the caller report it.
             summary["absent"].append(wid)
             continue
+        # A complete inventory says this is no longer for sale. Etsy wins: the
+        # piece leaves the grid. The record and its page are kept so inbound
+        # links, search results and the captured gallery survive, and so a
+        # relist restores it intact.
         sync["available"] = False
         sync["delisted_at"] = sync.get("delisted_at") or now
+        sync["on_etsy"] = False
         summary["sold"].append(wid)
+
 
     summary["absent"].sort()
     out = dict(db)
@@ -600,27 +732,79 @@ def merge(db, feed_items, now=None, complete=False):
     return out, summary
 
 
+def title_key(work_or_title):
+    """A stable identity for an artwork, independent of its listing id.
+
+    Etsy mints a NEW listing id when a piece is relisted, so the id identifies
+    a listing, never the work. The leading title segment — before the "(framed,
+    original)" parenthetical and before the " / English translation" half — is
+    the most stable handle the feed actually gives, and slugify() flattens
+    accents and punctuation so "Sabiduría" and "Sabiduria" agree.
+    """
+    if isinstance(work_or_title, dict):
+        etsy = work_or_title.get("etsy")
+        title = (etsy or {}).get("title") if etsy is not None else work_or_title.get("title")
+    else:
+        title = work_or_title
+    title = (title or "").strip()
+    if not title:
+        return None
+    return slugify(title.split("(")[0].split("/")[0])
+
+
 def duplicate_listings(db):
     """Group works whose titles match, i.e. one piece under several listing ids.
 
     Etsy mints a new listing id when a piece is relisted, so the same artwork
     can end up stored twice — once live, once frozen as "sold". This only
-    reports them. Merging is not automatic on purpose: duplicates routinely
-    disagree on price, so whether two ids are one relisted piece or two real
-    listings is a question only the artist can answer, and guessing wrong
-    deletes a live listing and 404s an indexed page.
+    reports them; plan_relists() is what resolves the ones the API proves are
+    a relist. Two ids that are BOTH still active are two real listings, and
+    merging those would delete a live one, so that stays the artist's call.
 
-    Returns {normalised_title: [work, ...]} for titles held by >1 work.
+    Returns {title_key: [work, ...]} for keys held by >1 work.
     """
     groups = {}
     for work in db.get("works", []):
-        title = ((work.get("etsy") or {}).get("title") or "").strip()
-        if not title:
-            continue
-        key = slugify(title.split("(")[0].split("/")[0])
+        key = title_key(work)
         if key:
             groups.setdefault(key, []).append(work)
     return {k: v for k, v in sorted(groups.items()) if len(v) > 1}
+
+
+def plan_relists(db, active_ids):
+    """Match a work whose listing id vanished to the live listing that replaced it.
+
+    When Etsy relists a piece its id changes, which otherwise looks like one
+    sale plus one brand-new work — and strands the captured gallery, the
+    curation and the first_seen date on the dead id.
+
+    A pairing is only proposed when it is unambiguous in both directions: one
+    departed work and exactly one live listing share a title key, and neither
+    is already spoken for. Anything less stays unpaired, because a wrong merge
+    moves an artist's hand-written curation onto the wrong piece.
+
+    Returns a sorted list of (old_id, new_id).
+    """
+    active_ids = set(active_ids)
+    live, gone = {}, {}
+    for work in db.get("works", []):
+        if work.get("source") != "etsy":
+            continue
+        key = title_key(work)
+        if not key:
+            continue
+        if work["id"] in active_ids:
+            live.setdefault(key, []).append(work)
+        elif not (work.get("sync") or {}).get("superseded_by"):
+            gone.setdefault(key, []).append(work)
+
+    plan = []
+    for key, departed in gone.items():
+        candidates = live.get(key) or []
+        if len(departed) == 1 and len(candidates) == 1:
+            plan.append((departed[0]["id"], candidates[0]["id"]))
+    return sorted(plan)
+
 
 
 
@@ -726,6 +910,11 @@ def view(work):
         "status": status,
         "available": status == "available",
         "hidden": bool(cur.get("hidden")),
+        # False only when a COMPLETE inventory proved the listing is gone.
+        # Defaults True so RSS-only syncs and pre-existing records — which
+        # never carried the flag — keep showing exactly as they did.
+        "on_etsy": bool(sync.get("on_etsy", True)),
+        "superseded_by": sync.get("superseded_by"),
         "featured": bool(cur.get("featured")),
         "order": cur.get("order"),
         "first_seen": sync.get("first_seen") or "",

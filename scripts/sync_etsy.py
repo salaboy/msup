@@ -91,12 +91,18 @@ def describe(summary, warnings):
     for key, label in (
         ("new", "added"),
         ("changed", "updated"),
-        ("sold", "marked sold"),
+        ("sold", "no longer on Etsy"),
         ("relisted", "relisted"),
     ):
         if summary[key]:
             parts.append("%d %s (%s)" % (len(summary[key]), label, ", ".join(summary[key])))
     lines = ["Etsy sync: " + ("; ".join(parts) if parts else "no changes")]
+    if summary.get("relisted_as"):
+        lines.append(
+            "followed %d relisted piece(s) to a new listing id: %s"
+            % (len(summary["relisted_as"]),
+               ", ".join("%s -> %s" % pair for pair in summary["relisted_as"]))
+        )
     if summary.get("absent"):
         lines.append(
             "%d work(s) not in this feed window, left untouched: %s"
@@ -106,6 +112,7 @@ def describe(summary, warnings):
         lines.append("archived %d image(s): %s" % (len(summary["archived"]), ", ".join(summary["archived"])))
     lines += ["warning: " + w for w in warnings]
     return "\n".join(lines)
+
 
 
 def describe_duplicates(dupes):
@@ -208,6 +215,78 @@ def enrich_images(items, api_key, verbose=False):
     return enriched
 
 
+def apply_relists(db, plan):
+    """Follow a piece onto its new listing id, in memory only.
+
+    Etsy mints a new id when a piece is relisted, which strands three things on
+    the dead id: the artist's curation, the first_seen date the whole grid is
+    ordered by, and the captured gallery in data/images/<id>.json — the one
+    asset here a human had to produce by hand.
+
+    The old record is kept and marked `superseded_by` rather than deleted, so
+    its URL keeps resolving for anyone who shared it.
+
+    Curation is moved only onto a record that has none of its own, so a
+    hand-edited new listing is never overwritten by a stale one.
+
+    Touches no files: the gallery rename is move_galleries(), which runs only
+    once the run has survived the breaker and is actually being written.
+    """
+    moved, by_id = [], {w["id"]: w for w in db.get("works", [])}
+    for old_id, new_id in plan:
+        old, new = by_id.get(old_id), by_id.get(new_id)
+        if not old or not new:
+            continue
+
+        old_cur = old.get("curation") or {}
+        new_cur = new.get("curation") or {}
+        pristine = all(new_cur.get(k) == v for k, v in m.CURATION_DEFAULTS.items())
+        if pristine and any(old_cur.get(k) != v for k, v in m.CURATION_DEFAULTS.items()):
+            new["curation"] = dict(old_cur)
+
+        # The piece has been in the catalogue since the ORIGINAL listing; the
+        # grid is ordered by first_seen, so losing this reshuffles the page.
+        old_seen = (old.get("sync") or {}).get("first_seen")
+        new_sync = new.setdefault("sync", {})
+        if old_seen and old_seen < (new_sync.get("first_seen") or "9999"):
+            new_sync["first_seen"] = old_seen
+
+        old.setdefault("sync", {})["superseded_by"] = new_id
+        moved.append((old_id, new_id))
+    return moved
+
+
+def move_galleries(relists, images_dir, verbose=False):
+    """Rename data/images/<old_id>.json to the live listing id.
+
+    Separate from apply_relists, and called only on the write path, so a
+    --dry-run or a run the breaker refuses cannot leave the captured galleries
+    renamed against a works.json that was never written.
+
+    A failure here is reported, not fatal: the sync has already succeeded, and
+    the cost is one piece falling back to its API photos until the file is
+    renamed by hand.
+    """
+    moved = []
+    for old_id, new_id in relists:
+        source = os.path.join(images_dir, "%s.json" % old_id)
+        target = os.path.join(images_dir, "%s.json" % new_id)
+        if not os.path.exists(source) or os.path.exists(target):
+            continue
+        try:
+            os.replace(source, target)
+        except OSError as exc:
+            sys.stderr.write(
+                "warning: could not move gallery %s.json -> %s.json: %s\n"
+                % (old_id, new_id, exc)
+            )
+            continue
+        moved.append("%s.json -> %s.json" % (old_id, new_id))
+        if verbose:
+            sys.stderr.write("moved gallery %s.json -> %s.json\n" % (old_id, new_id))
+    return moved
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--source", default=m.DEFAULT_FEED, help="feed URL or local file")
@@ -219,6 +298,19 @@ def main(argv=None):
         "--allow-empty",
         action="store_true",
         help="proceed even though the feed returned nothing (see exit code 3)",
+    )
+    ap.add_argument(
+        "--use-api",
+        action="store_true",
+        help="read the shop's full active inventory from the Etsy v3 API "
+             "instead of the RSS feed. This is the only source that can prove "
+             "a listing is gone, so it implies --complete-inventory. Needs "
+             "--etsy-api-key.",
+    )
+    ap.add_argument(
+        "--shop",
+        default=m.DEFAULT_FEED.rstrip("/").split("/shop/")[-1].split("/")[0],
+        help="Etsy shop name, for --use-api (default derived from the feed URL)",
     )
     ap.add_argument(
         "--complete-inventory",
@@ -252,15 +344,35 @@ def main(argv=None):
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args(argv)
 
-    try:
-        raw = fetch_feed(args.source, args.verbose)
-        items, warnings = m.parse_feed(raw)
-    except (m.FetchError, OSError) as exc:
-        sys.stderr.write("error: %s\n" % exc)
-        return 1
-    except Exception as exc:  # malformed XML
-        sys.stderr.write("error: could not parse feed: %s\n" % exc)
-        return 1
+    complete = args.complete_inventory or args.use_api
+
+    if args.use_api:
+        if not args.etsy_api_key:
+            sys.stderr.write("error: --use-api needs --etsy-api-key or $ETSY_API_KEY\n")
+            return 1
+        try:
+            items, warnings = m.api_inventory(args.shop, args.etsy_api_key)
+        except (m.FetchError, OSError) as exc:
+            sys.stderr.write("error: %s\n" % exc)
+            return 1
+        except (ValueError, KeyError, TypeError) as exc:
+            # A shape change in the API is a hard stop, never a partial read:
+            # half an inventory is indistinguishable from a sold-out shop.
+            sys.stderr.write("error: could not read the Etsy API response: %s\n" % exc)
+            return 1
+        if args.verbose:
+            sys.stderr.write("Etsy API: %d active listing(s)\n" % len(items))
+    else:
+        try:
+            raw = fetch_feed(args.source, args.verbose)
+            items, warnings = m.parse_feed(raw)
+        except (m.FetchError, OSError) as exc:
+            sys.stderr.write("error: %s\n" % exc)
+            return 1
+        except Exception as exc:  # malformed XML
+            sys.stderr.write("error: could not parse feed: %s\n" % exc)
+            return 1
+
 
     db, bootstrapped = load_db(args.out)
 
@@ -272,10 +384,13 @@ def main(argv=None):
         sys.stderr.write("error: %s\n" % exc)
         return 2
 
-    if args.etsy_api_key and items:
+    if args.etsy_api_key and items and not args.use_api:
+        # RSS carries one photo per listing; --use-api already asked for the
+        # whole gallery in the same request.
         n = enrich_images(items, args.etsy_api_key, args.verbose)
         if args.verbose:
             sys.stderr.write("enriched %d/%d listings from the Etsy API\n" % (n, len(items)))
+
 
     applied = m.apply_manual_images(items, galleries)
     if args.verbose and applied:
@@ -306,7 +421,19 @@ def main(argv=None):
         return 3
 
 
-    new_db, summary = m.merge(db, items, complete=args.complete_inventory)
+    new_db, summary = m.merge(db, items, complete=complete)
+
+    # Must run before the breaker. A relisted piece leaves its old id behind,
+    # which merge() has just counted as gone; pairing it to the live listing is
+    # what tells those two events apart from a real sale.
+    relists = []
+    if complete:
+        plan = m.plan_relists(new_db, {i["listing_id"] for i in items})
+        if plan:
+            relists = apply_relists(new_db, plan)
+            superseded = {old for old, _ in relists}
+            summary["sold"] = [w for w in summary["sold"] if w not in superseded]
+            summary["relisted_as"] = relists
 
     # The breaker is the last line of defence behind --complete-inventory: if
     # the "complete" response was in fact truncated, this is what stops the
@@ -321,6 +448,7 @@ def main(argv=None):
             % (len(summary["sold"]), args.max_sold, ", ".join(summary["sold"]))
         )
         return 4
+
 
     if args.archive_images and not args.dry_run:
         # Must run before serialising so the stored path is part of this write.
@@ -338,6 +466,8 @@ def main(argv=None):
         )
         sys.stdout.writelines(diff)
         print(report)
+        if relists:
+            print("(dry run — would move %d gallery file(s))" % len(relists))
         print("(dry run — nothing written)")
         return 0
 
@@ -347,6 +477,15 @@ def main(argv=None):
         except OSError as exc:
             sys.stderr.write("error: could not write %s: %s\n" % (args.out, exc))
             return 2
+
+    # Only now, with works.json safely on disk, do the galleries follow their
+    # listing ids. The reverse order could rename a file for a write that then
+    # failed, leaving the gallery pointing at an id nothing refers to.
+    if relists:
+        moved = move_galleries(relists, args.images_dir, args.verbose)
+        if moved:
+            report += "\n" + "moved %d gallery file(s): %s" % (len(moved), ", ".join(moved))
+
 
     if not args.no_heartbeat:
         bump_heartbeat(m.today())

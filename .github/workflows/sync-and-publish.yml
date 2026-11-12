@@ -14,10 +14,18 @@ on:
         description: "Preview changes without committing or deploying"
         type: boolean
         default: false
+      use_api:
+        description: "Read the full active inventory from the Etsy API (needed for sold detection)"
+        type: boolean
+        default: true
       allow_empty:
-        description: "Permit an empty feed to mark every work sold (rare — see README)"
+        description: "Proceed even if the source returns nothing (rare — see README)"
         type: boolean
         default: false
+      max_sold:
+        description: "Refuse the run if more than this many pieces left Etsy at once"
+        type: string
+        default: "3"
       archive_images:
         description: "Save a local copy of a piece's photo when it sells"
         type: boolean
@@ -53,19 +61,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Sync from Etsy RSS
+      - name: Sync from Etsy
         id: sync
         env:
-          # Optional. Without it each piece shows only its main photo; with it
-          # the sync pulls the full gallery for every listing.
+          # Required for use_api, which is the only source that can tell a sold
+          # piece from one the RSS window simply did not include. Without it the
+          # sync falls back to RSS and will not mark anything sold.
           ETSY_API_KEY: ${{ secrets.ETSY_API_KEY }}
         run: |
           set -euo pipefail
           ARGS=""
           if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          if [ "${{ inputs.use_api }}" = "true" ]; then ARGS="$ARGS --use-api"; fi
           if [ "${{ inputs.allow_empty }}" = "true" ]; then ARGS="$ARGS --allow-empty"; fi
           if [ "${{ inputs.archive_images }}" = "true" ]; then ARGS="$ARGS --archive-images"; fi
+          ARGS="$ARGS --max-sold ${{ inputs.max_sold || '3' }}"
           python3 scripts/sync_etsy.py --check $ARGS | tee sync-report.txt
+
           {
             echo '## Etsy sync'
             echo '```'

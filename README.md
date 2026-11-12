@@ -269,20 +269,36 @@ no tracking code is emitted at all.
 
 ## When something sells
 
-**Set `status_override` to `"sold"`** on that piece in `data/works.json`. It
-moves to the **Sold** section of `/works/` instead of disappearing, and its page
-and URL stay live.
+**Nothing to do**, as long as the sync is running with `--use-api`. Etsy is the
+source of truth: the API lists every active listing, so a piece that is gone
+from Etsy is gone from the site — it leaves `/works/`, the home page and its
+collection on the next sync.
 
-This is a manual step on purpose. The sync used to infer it — a listing missing
-from the Etsy feed was treated as sold — but the shop RSS feed returns a rolling
-window of only ~10 listings, not the inventory. Every piece past the newest ten
-therefore looked sold: in November 2026 that put 31 of 41 works in the Sold
-section while they were still for sale on Etsy, with the buy button replaced and
-`schema.org/SoldOut` published for each.
+Its own page at `/works/<slug>/` stays live and reads **Sold**, so links you
+have shared, Instagram posts and search results keep working instead of 404ing.
+The record and the captured gallery are kept too, so if you relist the piece it
+comes straight back.
 
-So the sync now only ever **adds and updates**. It reports what is missing from
-the feed window and changes nothing, because a windowed feed cannot tell
-"delisted" from "page two". You know when something sells; the feed doesn't.
+**Without `--use-api` the sync will not mark anything sold.** The RSS feed
+returns a rolling window of only ~10 listings, not the inventory, so a missing
+listing means nothing: in November 2026 that put 31 of 41 works in the Sold
+section while they were still for sale. The RSS path now only adds and updates,
+and reports what it could not see. If you ever need to mark a sale by hand, set
+`status_override` to `"sold"`.
+
+### If a listing id changes
+
+Etsy mints a **new listing id** when a piece is relisted, which otherwise looks
+like one sale plus one brand-new work. The sync pairs the two by title and
+follows the piece across: the captured gallery in `data/images/<id>.json` is
+renamed to the new id, and the curation, the `first_seen` date and the grid
+position all move with it. The old record is kept and marked `superseded_by`,
+so its URL still resolves.
+
+It only does this when the pairing is unambiguous — one departed listing and
+exactly one live listing sharing a title. If **both** ids are still active on
+Etsy they are two real listings, not a relist, and both stay.
+
 
 
 ## Editing a piece by hand
@@ -322,7 +338,7 @@ was listed and what sold.
 ## How it fits together
 
 ```
-Etsy RSS ─────────┐   (listings + prices only — never sold status)
+Etsy API ─────────┐   (full active inventory — listings, prices, sold)
                   ├─▶ sync_etsy.py ──▶ data/works.json ──▶ build.py ──▶ _site/ ──▶ Pages
 data/images/*.json┘      (upsert)     (source of truth)   (templates/)
  (photos, captured
@@ -332,7 +348,7 @@ data/images/*.json┘      (upsert)     (source of truth)   (templates/)
 | File | Role |
 |---|---|
 | `scripts/msuplib.py` | Feed parsing, API images, merge rules, srcset. All the logic worth testing. |
-| `scripts/sync_etsy.py` | Etsy → `works.json`. Adds and updates only; never deletes, never marks sold. |
+| `scripts/sync_etsy.py` | Etsy → `works.json`. Never deletes a record; only marks sold from a complete inventory. |
 | `scripts/build.py` | `works.json` + `templates/` → `_site/`. |
 | `tools/grab-photos.js` | The bookmarklet source, compiled into `/tools/` at build time. |
 | `data/images/` | Captured galleries, one file per listing. Yours to edit. Applied by both the sync and the build, so committing one is enough. |
@@ -350,17 +366,25 @@ A few decisions that look odd until you know the reason:
 - **No server-side scraping.** Even if a bypass worked today, the sync runs on
   GitHub Actions datacenter IPs — the most heavily scrutinised kind — so it
   would break silently and leave empty galleries.
-- **The sync never infers a sale from absence** — the single most important
-  rule here. The shop RSS feed is a ~10-item window, so "not in the feed" means
-  almost nothing. Marking those sold emptied the shop front once already. A
-  source that genuinely lists every active listing can opt in with
-  `--complete-inventory`, and even that is capped by `--max-sold` (default 3):
-  a run that would sell off more than that is refused outright, because a
-  truncated response looks exactly like a sold-out shop.
-- **The sync refuses to write when the feed comes back empty** (exit code 3).
-  Nothing would be marked sold now, but an empty feed still means a bot
-  challenge or a renamed shop, so it fails loudly instead of passing as a quiet
-  no-op. Override with `--allow-empty` if the shop really is empty.
+- **The sync never infers a sale from absence unless the source is complete.**
+  The shop RSS feed is a ~10-item window, so "not in the feed" means almost
+  nothing, and marking those sold emptied the shop front once already. The v3
+  API lists every active listing and *can* answer the question, so `--use-api`
+  implies `--complete-inventory`. Even then the run is capped by `--max-sold`
+  (default 3): a truncated response looks exactly like a sold-out shop, so a
+  bigger drop is refused outright rather than written.
+- **A short read is a hard failure, never a partial write.** The API paginates;
+  the sync follows it to the end and checks the arrival count against the
+  `count` Etsy declares. A half-read inventory is indistinguishable from a shop
+  that sold out overnight, so it raises instead of proceeding.
+- **Gallery files are renamed only after `works.json` is safely written.** The
+  reverse order could rename a capture for a write that then failed, stranding
+  it on an id nothing refers to.
+- **The sync refuses to write when the source comes back empty** (exit code 3).
+  Nothing would be marked sold on the RSS path now, but an empty response still
+  means a bot challenge or a renamed shop, so it fails loudly instead of passing
+  as a quiet no-op. Override with `--allow-empty` if the shop really is empty.
+
 
 - **Images are hotlinked from Etsy**, not copied into the repo. Cheap and
   simple, with the caveat below.
@@ -391,9 +415,9 @@ A few decisions that look odd until you know the reason:
 
 ### Known limitations
 
-- **Photos need a manual capture per artwork.** See above. New listings and
-  price changes are automatic; **sold status is not** — see "When something
-  sells".
+- **Photos need a manual capture per artwork.** See above — though `--use-api`
+  now pulls the full gallery for each listing, so a capture is only needed when
+  you want a different set or a different order.
 - **Hotlinked images depend on Etsy.** Photos of sold or deactivated listings
   usually keep serving for years; photos of *deleted* listings eventually 404,
   and a broken image falls back to a placeholder. For a guaranteed archive, run

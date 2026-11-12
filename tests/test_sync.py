@@ -569,6 +569,271 @@ class TestDuplicateListings(unittest.TestCase):
         self.assertIn("curation.hidden", text)
 
 
+class TestEtsyApiInventory(unittest.TestCase):
+    """The API is the only source that can prove a listing is gone."""
+
+    @staticmethod
+    def listing(listing_id, title, amount=2500, description="Title: X\nSize: A3"):
+        return {
+            "listing_id": listing_id,
+            "title": title,
+            "description": description,
+            "price": {"amount": amount, "divisor": 100, "currency_code": "GBP"},
+            "images": [
+                {"rank": 1, "full_width": 900, "full_height": 700,
+                 "url_570xN": "https://i.etsystatic.com/1/r/il/aa/%d/il_570xN.%d_aa.jpg"
+                              % (listing_id, listing_id)},
+            ],
+        }
+
+    def fake_api(self, listings, page_size=100, shop="MSupShop", count=None):
+        """Serves the shop lookup and the paginated active-listings endpoint."""
+        calls = []
+
+        def _fetch(url, headers=None, **kw):
+            calls.append(url)
+            if "/shops?shop_name=" in url:
+                return json.dumps({"results": [{"shop_id": 777, "shop_name": shop}]}).encode()
+            offset = int(re.search(r"offset=(\d+)", url).group(1))
+            page = listings[offset:offset + page_size]
+            total = count if count is not None else len(listings)
+            return json.dumps({"count": total, "results": page}).encode()
+
+        _fetch.calls = calls
+        return _fetch
+
+    def test_items_match_the_shape_parse_feed_produces(self):
+        fetch = self.fake_api([self.listing(1, "FIX (framed, original)")])
+        items, _ = m.api_inventory("MSupShop", "KEY", fetcher=fetch)
+        rss, _ = m.parse_feed(FIX_FEED)
+        self.assertEqual(set(items[0]), set(rss[0]),
+                         "API items must be indistinguishable from feed items")
+        self.assertEqual(items[0]["listing_id"], "1")
+        self.assertEqual(items[0]["image_source"], "api")
+        self.assertEqual(items[0]["url"], "https://www.etsy.com/listing/1/fix")
+
+    def test_price_divisor_is_applied(self):
+        fetch = self.fake_api([self.listing(1, "A", amount=25000)])
+        items, _ = m.api_inventory("MSupShop", "KEY", fetcher=fetch)
+        self.assertEqual(items[0]["price"]["amount"], "250.00")
+        self.assertEqual(items[0]["price"]["currency"], "GBP")
+
+    def test_pagination_is_followed_to_the_end(self):
+        listings = [self.listing(i, "Piece %d" % i) for i in range(250)]
+        fetch = self.fake_api(listings, page_size=100)
+        items, _ = m.api_inventory("MSupShop", "KEY", fetcher=fetch)
+        self.assertEqual(len(items), 250, "a short read looks like a sold-out shop")
+
+    def test_short_read_against_declared_count_is_fatal(self):
+        """Half an inventory is indistinguishable from a shop that sold out."""
+        listings = [self.listing(i, "Piece %d" % i) for i in range(50)]
+        fetch = self.fake_api(listings, page_size=100, count=120)
+        with self.assertRaises(m.FetchError) as ctx:
+            m.api_inventory("MSupShop", "KEY", fetcher=fetch)
+        self.assertIn("incomplete inventory", str(ctx.exception))
+
+    def test_wrong_shop_name_is_refused(self):
+        fetch = self.fake_api([], shop="SomeoneElse")
+        with self.assertRaises(m.FetchError):
+            m.api_inventory("MSupShop", "KEY", fetcher=fetch)
+
+    def test_api_key_is_sent_on_every_request(self):
+        captured = []
+
+        def _fetch(url, headers=None, **kw):
+            captured.append((headers or {}).get("x-api-key"))
+            if "/shops?shop_name=" in url:
+                return json.dumps({"results": [{"shop_id": 7, "shop_name": "MSupShop"}]}).encode()
+            return json.dumps({"count": 1, "results": [self.listing(1, "A")]}).encode()
+
+        m.api_inventory("MSupShop", "SECRET", fetcher=_fetch)
+        self.assertTrue(captured and all(k == "SECRET" for k in captured))
+
+
+class TestRelistAlignment(unittest.TestCase):
+    """A relisted piece gets a NEW listing id; its data must follow it."""
+
+    def db_with(self, *specs):
+        db = m.empty_db()
+        for wid, title in specs:
+            db["works"].append({
+                "id": wid, "source": "etsy",
+                "etsy": {"title": title, "slug": "x", "price": {"raw": "25.00 GBP"}},
+                "sync": {"available": True, "delisted_at": None, "relisted_at": None,
+                         "first_seen": "2026-01-01", "on_etsy": True},
+                "curation": dict(m.CURATION_DEFAULTS),
+            })
+        return db
+
+    def test_vanished_id_pairs_with_the_live_one(self):
+        db = self.db_with(("111", "Not Equal (drawing)"), ("222", "Not Equal (drawing)"))
+        self.assertEqual(m.plan_relists(db, {"222"}), [("111", "222")])
+
+    def test_two_live_ids_are_never_paired(self):
+        """Both still active means two real listings, not a relist."""
+        db = self.db_with(("111", "Not Equal (drawing)"), ("222", "Not Equal (drawing)"))
+        self.assertEqual(m.plan_relists(db, {"111", "222"}), [])
+
+    def test_ambiguous_pairing_is_refused(self):
+        db = self.db_with(("111", "Chaos"), ("222", "Chaos"), ("333", "Chaos"))
+        self.assertEqual(m.plan_relists(db, {"333"}), [],
+                         "two departed candidates is ambiguous; refuse to guess")
+
+    def test_curation_first_seen_and_gallery_all_follow(self):
+        import sync_etsy
+        db = self.db_with(("111", "Not Equal (drawing)"), ("222", "Not Equal (drawing)"))
+        old = db["works"][0]
+        old["curation"].update({"featured": True, "alt": "hand written", "year": 2023})
+        old["sync"]["first_seen"] = "2025-03-04"
+        db["works"][1]["sync"]["first_seen"] = "2026-11-11"
+
+        with tempfile.TemporaryDirectory() as d:
+            with open(os.path.join(d, "111.json"), "w", encoding="utf-8") as fh:
+                json.dump(["https://i.etsystatic.com/1/r/il/a/9/il_fullxfull.9_z.jpg"], fh)
+
+            plan = m.plan_relists(db, {"222"})
+            moved = sync_etsy.apply_relists(db, plan)
+            sync_etsy.move_galleries(moved, d)
+
+            new = db["works"][1]
+            self.assertTrue(new["curation"]["featured"])
+            self.assertEqual(new["curation"]["alt"], "hand written")
+            self.assertEqual(new["sync"]["first_seen"], "2025-03-04",
+                             "ordering must not jump because Etsy reissued the id")
+            self.assertEqual(db["works"][0]["sync"]["superseded_by"], "222")
+            self.assertTrue(os.path.exists(os.path.join(d, "222.json")))
+            self.assertFalse(os.path.exists(os.path.join(d, "111.json")))
+
+    def test_hand_edited_new_record_is_not_overwritten(self):
+        import sync_etsy
+        db = self.db_with(("111", "Chaos"), ("222", "Chaos"))
+        db["works"][0]["curation"]["alt"] = "old text"
+        db["works"][1]["curation"]["alt"] = "deliberate new text"
+        sync_etsy.apply_relists(db, m.plan_relists(db, {"222"}))
+        self.assertEqual(db["works"][1]["curation"]["alt"], "deliberate new text")
+
+    def test_superseded_work_is_not_paired_again(self):
+        db = self.db_with(("111", "Chaos"), ("222", "Chaos"))
+        db["works"][0]["sync"]["superseded_by"] = "222"
+        self.assertEqual(m.plan_relists(db, {"222"}), [])
+
+    def test_dry_run_moves_no_gallery_file(self):
+        """apply_relists must not touch disk; only the write path may."""
+        import sync_etsy
+        db = self.db_with(("111", "Chaos"), ("222", "Chaos"))
+        with tempfile.TemporaryDirectory() as d:
+            with open(os.path.join(d, "111.json"), "w", encoding="utf-8") as fh:
+                fh.write("[]")
+            sync_etsy.apply_relists(db, m.plan_relists(db, {"222"}))
+            self.assertTrue(os.path.exists(os.path.join(d, "111.json")))
+
+
+class TestEtsyWins(unittest.TestCase):
+    """A piece Etsy no longer lists leaves the grid but keeps its page."""
+
+    def build(self):
+        items, _ = m.parse_feed(FIX_FEED)
+        db, _ = m.merge(m.empty_db(), items, now="2026-08-31")
+        return db
+
+    def test_gone_from_a_complete_inventory_clears_on_etsy(self):
+        db = self.build()
+        db, summary = m.merge(db, [], now="2026-09-10", complete=True)
+        self.assertEqual(summary["sold"], ["4565863595"])
+        self.assertFalse(db["works"][0]["sync"]["on_etsy"])
+
+    def test_view_exposes_on_etsy_and_defaults_it_true(self):
+        db = self.build()
+        self.assertTrue(m.view(db["works"][0])["on_etsy"])
+        db["works"][0]["sync"].pop("on_etsy")
+        self.assertTrue(m.view(db["works"][0])["on_etsy"],
+                        "records written before this flag existed must still show")
+
+    def test_record_and_page_data_survive_removal(self):
+        db = self.build()
+        db, _ = m.merge(db, [], now="2026-09-10", complete=True)
+        self.assertEqual(len(db["works"]), 1)
+        view = m.view(db["works"][0])
+        self.assertEqual(view["status"], "sold")
+        self.assertTrue(view["images"], "the page must still render its photos")
+
+    def test_relist_restores_it_to_the_grid(self):
+        db = self.build()
+        db, _ = m.merge(db, [], now="2026-09-10", complete=True)
+        items, _ = m.parse_feed(FIX_FEED)
+        db, _ = m.merge(db, items, now="2026-09-20", complete=True)
+        self.assertTrue(db["works"][0]["sync"]["on_etsy"])
+        self.assertTrue(m.view(db["works"][0])["available"])
+
+
+class TestEtsyWinsInTheBuild(unittest.TestCase):
+    """End-to-end: Etsy drops a piece -> it leaves the grid, its page survives."""
+
+    def site_cfg(self):
+        return {
+            "title": "Maryland Supreme", "tagline": "Hand drawn originals",
+            "description": "Test site.", "author": "Mauricio Salatino",
+            "base_url": "https://example.com/", "base_path": "/",
+            "etsy_shop_url": "https://www.etsy.com/shop/MSupShop",
+            "instagram_url": "https://instagram.com/marylandsupreme",
+            "google_analytics": "", "collections": [], "exhibitions": [],
+            "nav": [{"label": "Work", "path": "works/"}],
+        }
+
+    def build_site(self, db, out):
+        import build
+        build.Site(self.site_cfg(), db, out).build()
+
+    def two_work_db(self):
+        items, _ = m.parse_feed(FIX_FEED)
+        second = dict(items[0], listing_id="7777777777", slug="chaos", title="Chaos")
+        db, _ = m.merge(m.empty_db(), items + [second], now="2026-08-31", complete=True)
+        return db
+
+    def test_removed_piece_leaves_the_grid_but_keeps_its_page(self):
+        db = self.two_work_db()
+        # Etsy now lists only the second piece.
+        items, _ = m.parse_feed(FIX_FEED)
+        second = dict(items[0], listing_id="7777777777", slug="chaos", title="Chaos")
+        db, summary = m.merge(db, [second], now="2026-09-10", complete=True)
+        self.assertEqual(summary["sold"], ["4565863595"])
+
+        with tempfile.TemporaryDirectory() as out:
+            self.build_site(db, out)
+
+            with open(os.path.join(out, "works", "index.html"), encoding="utf-8") as fh:
+                grid = fh.read()
+            self.assertNotIn("4565863595", grid, "Etsy wins: it must leave the grid")
+            self.assertIn("7777777777", grid)
+
+            pages = [p for p in os.listdir(os.path.join(out, "works"))
+                     if p.startswith("4565863595")]
+            self.assertEqual(len(pages), 1, "its own page must still be built")
+            with open(os.path.join(out, "works", pages[0], "index.html"), encoding="utf-8") as fh:
+                page = fh.read()
+            self.assertIn("Sold", page)
+            self.assertIn("SoldOut", page, "structured data must agree with the label")
+
+    def test_superseded_piece_is_also_kept_out_of_the_grid(self):
+        db = self.two_work_db()
+        db["works"][0]["sync"]["superseded_by"] = "7777777777"
+        with tempfile.TemporaryDirectory() as out:
+            self.build_site(db, out)
+            with open(os.path.join(out, "works", "index.html"), encoding="utf-8") as fh:
+                grid = fh.read()
+            self.assertNotIn("4565863595", grid,
+                             "a relisted piece must not appear twice in the grid")
+
+    def test_an_ordinary_catalogue_is_unaffected(self):
+        db = self.two_work_db()
+        with tempfile.TemporaryDirectory() as out:
+            self.build_site(db, out)
+            with open(os.path.join(out, "works", "index.html"), encoding="utf-8") as fh:
+                grid = fh.read()
+            self.assertIn("4565863595", grid)
+            self.assertIn("7777777777", grid)
+
+
 class TestSyncScript(unittest.TestCase):
     """End-to-end via the CLI, using a local fixture instead of the network."""
 
@@ -657,6 +922,79 @@ class TestSyncScript(unittest.TestCase):
             with open(out, encoding="utf-8") as fh:
                 works = json.load(fh)["works"]
             self.assertTrue(all(w["sync"]["available"] for w in works))
+
+    @staticmethod
+    def one_listing(listing_id, title):
+        return (
+            '<?xml version="1.0"?><rss version="2.0"><channel>'
+            "<title>Etsy Shop for MSupShop</title><item>"
+            "<title>%s by MSupShop</title>"
+            '<description>&lt;p class="price"&gt;25.00 GBP&lt;/p&gt;</description>'
+            "<guid>https://www.etsy.com/uk/listing/%s/x</guid>"
+            "</item></channel></rss>" % (title, listing_id)
+        ).encode()
+
+    def test_relist_is_followed_not_counted_as_a_sale(self):
+        """A new listing id for the same piece must not read as sold + new.
+
+        This is the end-to-end version of the duplicate pairs that accumulated
+        in the real catalogue: without pairing, one relist spends a slot of the
+        --max-sold budget and strands the captured gallery on a dead id.
+        """
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "works.json")
+            images = os.path.join(d, "images")
+            os.makedirs(images)
+            with open(os.path.join(images, "111.json"), "w", encoding="utf-8") as fh:
+                json.dump(["https://i.etsystatic.com/1/r/il/a/9/il_fullxfull.9_z.jpg"], fh)
+
+            self.assertEqual(self.run_sync(self.one_listing("111", "Chaos"), out).returncode, 0)
+            result = self.run_sync(self.one_listing("222", "Chaos"), out,
+                                   "--complete-inventory", "--max-sold", "0")
+            self.assertEqual(result.returncode, 0,
+                             "a relist must not spend the --max-sold budget")
+            self.assertIn("111 -> 222", result.stdout)
+
+            with open(out, encoding="utf-8") as fh:
+                works = {w["id"]: w for w in json.load(fh)["works"]}
+            self.assertEqual(works["111"]["sync"]["superseded_by"], "222")
+            self.assertTrue(works["222"]["sync"]["available"])
+            self.assertEqual(works["222"]["sync"]["first_seen"],
+                             works["111"]["sync"]["first_seen"],
+                             "the piece has been in the catalogue since the first listing")
+            # The hand-captured gallery follows the piece onto the live id.
+            self.assertTrue(os.path.exists(os.path.join(images, "222.json")))
+            self.assertFalse(os.path.exists(os.path.join(images, "111.json")))
+
+    def test_refused_run_leaves_galleries_alone(self):
+        """The breaker must not fire after the gallery files have been renamed."""
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "works.json")
+            images = os.path.join(d, "images")
+            os.makedirs(images)
+            with open(os.path.join(images, "9000000000.json"), "w", encoding="utf-8") as fh:
+                fh.write("[]")
+
+            self.run_sync(feed_with_items(6), out)
+            result = self.run_sync(EMPTY_FEED, out, "--allow-empty",
+                                   "--complete-inventory", "--max-sold", "3")
+            self.assertEqual(result.returncode, 4)
+            self.assertTrue(os.path.exists(os.path.join(images, "9000000000.json")),
+                            "a refused run must not have touched the galleries")
+
+    def test_use_api_without_a_key_is_refused(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "works.json")
+            env_free = dict(os.environ)
+            env_free.pop("ETSY_API_KEY", None)
+            result = subprocess.run(
+                [sys.executable, os.path.join(ROOT, "scripts", "sync_etsy.py"),
+                 "--out", out, "--no-heartbeat", "--use-api"],
+                capture_output=True, text=True, env=env_free,
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("--etsy-api-key", result.stderr)
+            self.assertFalse(os.path.exists(out))
 
 
     def test_non_rss_response_is_fatal(self):

@@ -1185,10 +1185,14 @@ class Site:
 
     def build(self):
         works = m.visible_works(self.db)
-        available = [w for w in works if w["available"]]
-        sold = [w for w in works if not w["available"]]
+        # Etsy wins: a piece it no longer lists leaves every grid, collection
+        # and feed. Its page is still built below, so inbound links, shared
+        # posts and search results keep resolving instead of 404ing.
+        listed = [w for w in works if w["on_etsy"] and not w["superseded_by"]]
+        available = [w for w in listed if w["available"]]
+        sold = [w for w in listed if not w["available"]]
         featured = [w for w in available if w["featured"]] or available
-        members = collection_members(works, self.by_collection)
+        members = collection_members(listed, self.by_collection)
 
         for coll in self.collections:
             self.check_banner(coll)
