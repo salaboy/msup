@@ -390,6 +390,15 @@ def main(argv=None):
         n = enrich_images(items, args.etsy_api_key, args.verbose)
         if args.verbose:
             sys.stderr.write("enriched %d/%d listings from the Etsy API\n" % (n, len(items)))
+        if not n:
+            # Silent degradation here is how a dead API key went unnoticed for
+            # months: every listing fell back to its single RSS photo and the
+            # run still reported success.
+            warnings.append(
+                "an ETSY_API_KEY is set but enriched 0 of %d listings — the key is "
+                "probably rejected; see the warnings above" % len(items)
+            )
+
 
 
     applied = m.apply_manual_images(items, galleries)

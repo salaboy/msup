@@ -73,6 +73,28 @@ class FetchError(Exception):
     """Network, HTTP, or obviously-not-RSS response."""
 
 
+def _http_detail(exc):
+    """The server's own explanation of a 4xx, if it sent one.
+
+    Etsy answers a bad key with a precise reason ("API key not found or not
+    active, or incorrect shared secret"). Reporting only "HTTP 403" throws that
+    away and turns a sixty-second fix into a guessing game.
+    """
+    try:
+        body = exc.read(500).decode("utf-8", "replace").strip()
+    except Exception:
+        return ""
+    if not body:
+        return ""
+    try:
+        parsed = json.loads(body)
+        if isinstance(parsed, dict):
+            body = parsed.get("error") or parsed.get("message") or body
+    except ValueError:
+        pass
+    return " — %s" % " ".join(str(body).split())[:300]
+
+
 def fetch(url, timeout=30, retries=3, sleep=time.sleep, headers=None):
     """GET a URL, returning bytes. Retries transient failures with backoff.
 
@@ -81,6 +103,7 @@ def fetch(url, timeout=30, retries=3, sleep=time.sleep, headers=None):
     """
     backoff = (1, 4, 10)
     last = None
+    detail = ""
     for attempt in range(retries):
         hdrs = {
             "User-Agent": USER_AGENT,
@@ -94,13 +117,15 @@ def fetch(url, timeout=30, retries=3, sleep=time.sleep, headers=None):
                 return resp.read()
         except urllib.error.HTTPError as exc:
             last = exc
+            detail = _http_detail(exc) or detail
             if exc.code not in (403, 429) and exc.code < 500:
-                raise FetchError("HTTP %s for %s" % (exc.code, url)) from exc
+                raise FetchError("HTTP %s for %s%s" % (exc.code, url, detail)) from exc
         except (urllib.error.URLError, socket.timeout, TimeoutError) as exc:
             last = exc
         if attempt < retries - 1:
             sleep(backoff[min(attempt, len(backoff) - 1)])
-    raise FetchError("giving up on %s after %d attempts: %s" % (url, retries, last))
+    raise FetchError("giving up on %s after %d attempts: %s%s" % (url, retries, last, detail))
+
 
 
 # --------------------------------------------------------------------------

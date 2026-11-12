@@ -12,6 +12,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import urllib.error
+import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -832,6 +834,63 @@ class TestEtsyWinsInTheBuild(unittest.TestCase):
                 grid = fh.read()
             self.assertIn("4565863595", grid)
             self.assertIn("7777777777", grid)
+
+
+class TestHttpErrorDetail(unittest.TestCase):
+    """A rejected API key must say WHY, once, in the error.
+
+    The key in this repo was rejected on every run for months while the sync
+    reported success, because the only thing surfaced was "HTTP 403".
+    """
+
+    class FakeHTTPError(urllib.error.HTTPError):
+        def __init__(self, body, code=403):
+            self._body = body.encode()
+            self.code = code
+            # HTTPError.__str__ reads .msg; set it rather than calling super(),
+            # which would want a real file object.
+            self.msg = "Forbidden"
+
+        def read(self, n=None):
+            return self._body[:n] if n else self._body
+
+    def test_json_error_field_is_surfaced(self):
+        exc = self.FakeHTTPError(json.dumps(
+            {"error": "API key not found or not active, or incorrect shared secret for API key."}))
+        self.assertIn("API key not found", m._http_detail(exc))
+
+    def test_plain_body_is_surfaced_and_collapsed(self):
+        self.assertIn("something  broke".replace("  ", " "),
+                      m._http_detail(self.FakeHTTPError("something  broke\n")))
+
+    def test_empty_or_unreadable_body_is_not_fatal(self):
+        self.assertEqual(m._http_detail(self.FakeHTTPError("")), "")
+
+        class Unreadable(Exception):
+            pass
+
+        class Boom:
+            def read(self, n=None):
+                raise Unreadable()
+
+        self.assertEqual(m._http_detail(Boom()), "")
+
+    def test_detail_reaches_the_raised_fetch_error(self):
+        calls = []
+
+        def boom(url, timeout=None, **kw):
+            calls.append(url)
+            raise self.FakeHTTPError(json.dumps({"error": "key rejected"}))
+
+        original = urllib.request.urlopen
+        urllib.request.urlopen = boom
+        try:
+            with self.assertRaises(m.FetchError) as ctx:
+                m.fetch("https://openapi.etsy.com/v3/application/shops", retries=2,
+                        sleep=lambda s: None)
+        finally:
+            urllib.request.urlopen = original
+        self.assertIn("key rejected", str(ctx.exception))
 
 
 class TestSyncScript(unittest.TestCase):
